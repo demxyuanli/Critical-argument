@@ -19,7 +19,10 @@ Extract `--lang` flag (default `en`, supported: `en`, `zh`). Everything else is 
 ### Step 0.2: Create state file and gate directory
 
 ```bash
-TASK_SLUG=$(echo "<task description>" | head -c 50 | tr ' ' '-' | tr -cd 'a-zA-Z0-9-')
+TASK_SLUG=$(echo "<task description>" | head -c 50 | tr ' ' '-' | tr -cd 'a-zA-Z0-9-' | sed 's/-\+/-/g; s/^-//; s/-$//')
+if [[ -z "$TASK_SLUG" ]]; then
+  TASK_SLUG="task-$(date +%H%M%S)"
+fi
 GATE_DIR="docs/toulmin/$(date +%Y-%m-%d)-${TASK_SLUG}"
 mkdir -p "${GATE_DIR}"
 ```
@@ -54,6 +57,10 @@ Report: mode, task, gate directory, language. Then proceed.
 3. What are the success criteria? Each must be binary-verifiable (test can say pass/fail).
 
 **Gate rule**: Do not proceed until user confirms the boundary and success criteria.
+Then update `phase` to `task`:
+```bash
+sed -i.bak 's/^phase: .*/phase: task/' .claude/toulmin-state.local.md
+```
 
 ## Phase 2: Task Decomposition
 
@@ -70,6 +77,10 @@ T2: [name] → done: [verifiable condition] → depends: [T1]
 ```
 
 **Gate rule**: Do not proceed until user confirms the decomposition.
+Then update `phase` to `gate-1`:
+```bash
+sed -i.bak 's/^phase: .*/phase: gate-1/' .claude/toulmin-state.local.md
+```
 
 ## Gate 1 — Direction Convergence
 
@@ -107,13 +118,22 @@ Write `{gate_dir}/gate-1-convergence.md`:
 ## Verdict: PASSED
 ```
 
-Update state file: `gates_passed: [gate-1]`, `gate_current: gate-2`.
+Update state file: `gates_passed: [gate-1]`, `gate_current: gate-2`, `phase: gate-2`.
+
+```bash
+# Atomic update — use sed to avoid overwriting iteration counter
+sed -i.bak \
+  -e 's/^gates_passed: .*/gates_passed: [gate-1]/' \
+  -e 's/^gate_current: .*/gate_current: gate-2/' \
+  -e 's/^phase: .*/phase: gate-2/' \
+  .claude/toulmin-state.local.md
+```
 
 # Gate 2 — Limited Verification
 
 Delegate to the toulmin-verify skill:
 
-> Invoke Skill("toulmin-verify"). The skill reads the state file, executes L1-L4, writes gate-2-verification.md, and updates the state file.
+> Invoke Skill("toulmin:toulmin-verify"). The skill reads the state file, executes L1-L4, writes gate-2-verification.md, and updates the state file.
 
 After toulmin-verify returns:
 - Read gate-2-verification.md for the verdict.
@@ -125,26 +145,41 @@ After toulmin-verify returns:
 ### Target
 
 For each task, define the expected output structure (function signatures, data shapes, API contracts).
+```bash
+sed -i.bak 's/^phase: .*/phase: target/' .claude/toulmin-state.local.md
+```
 
 ### Pseudocode
 
 For each task, sketch the algorithm skeleton. Pseudocode must trace back to the verification conditions in gate-2.
+```bash
+sed -i.bak 's/^phase: .*/phase: pseudocode/' .claude/toulmin-state.local.md
+```
 
 ### Code
 
 Implement each task. Follow the pseudocode and targets.
+```bash
+sed -i.bak 's/^phase: .*/phase: code/' .claude/toulmin-state.local.md
+```
 
 ### Verify
 
 Verify each task independently against its done condition. All verifications must pass before proceeding.
 
 Update state file: `phase: verify`, `gate_current: gate-3`.
+```bash
+sed -i.bak \
+  -e 's/^phase: .*/phase: verify/' \
+  -e 's/^gate_current: .*/gate_current: gate-3/' \
+  .claude/toulmin-state.local.md
+```
 
 ## Gate 3 — Adversarial Debate
 
 Delegate to the toulmin-debate skill:
 
-> Invoke Skill("toulmin-debate"). The skill reads recent code changes, executes R1-R3, writes gate-3-debate.md, and updates the state file.
+> Invoke Skill("toulmin:toulmin-debate"). The skill reads recent code changes, executes R1-R3, writes gate-3-debate.md, and updates the state file.
 
 After toulmin-debate returns:
 - Read gate-3-debate.md for the verdict.
@@ -154,13 +189,24 @@ After toulmin-debate returns:
 
 ## Phase 4: Regression
 
+At the start of Phase 4, update phase:
+```bash
+sed -i.bak 's/^phase: .*/phase: regression/' .claude/toulmin-state.local.md
+```
+
 1. Re-run all existing verifications — they must still pass.
 2. Run any new verifications covering the boundaries from gate-2 and the conditions from gate-3.
 3. All regression tests must pass.
 
 ## Completion
 
-All 3 gates passed + regression passed = task complete. Report final status with gate document references.
+All 3 gates passed + regression passed = task complete.
+
+```bash
+sed -i.bak 's/^phase: .*/phase: complete/' .claude/toulmin-state.local.md
+```
+
+Report final status with gate document references.
 
 ---
 

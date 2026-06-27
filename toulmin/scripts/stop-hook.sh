@@ -32,7 +32,9 @@ fi
 
 # Validate iteration is numeric
 if [[ ! "$ITERATION" =~ ^[0-9]+$ ]]; then
-  echo "⚠️  Toulmin: State file corrupted (iteration=$ITERATION)" >&2
+  echo "⚠️  Toulmin: State file corrupted (iteration=$ITERATION). Removing state file to stop interventions." >&2
+  echo "   Run /toulmin-plan or /toulmin-vibe to start fresh." >&2
+  rm "$STATE_FILE"
   exit 0
 fi
 

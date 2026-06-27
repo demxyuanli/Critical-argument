@@ -19,7 +19,7 @@ Execute the three-round adversarial debate against the completed output. This is
 
 ### Round 1: Structural Challenge (as adversarial reviewer)
 
-**YOU are now the adversary.** Your goal is to find concrete, verifiable defects. Use the toulmin-debater agent to perform the R1 scan, OR execute it yourself following the same protocol.
+**YOU are now the adversary.** Your goal is to find concrete, verifiable defects. For non-trivial output, you MUST use the toulmin-debater agent (via Agent tool) to perform R1 — the agent's isolated context provides the adversarial separation this gate requires. Execute R1 yourself only for trivial outputs (single-function, <50 lines).
 
 Attack dimensions (in order):
 - **D1 Correctness**: Any input producing wrong output?
@@ -83,8 +83,24 @@ Write `{gate_dir}/gate-3-debate.md`:
 ## Post-debate
 
 1. Update `.claude/toulmin-state.local.md`:
-   - If PASSED/CONDITIONAL: `gates_passed` append "gate-3", `gate_current` → null, `gate_blocked` → false
-   - If FAILED: `gate_blocked` → true, `gate_current` → "gate-3"
+   - If PASSED/CONDITIONAL:
+     ```bash
+     # Append gate-3 to gates_passed (handle both empty and non-empty array)
+     sed -i.bak '/^gates_passed: \[.\+\]/ s/^gates_passed: \[\(.*\)\]/gates_passed: [\1, gate-3]/' .claude/toulmin-state.local.md
+     sed -i.bak 's/^gates_passed: \[\]/gates_passed: [gate-3]/' .claude/toulmin-state.local.md
+     sed -i.bak \
+       -e 's/^gate_current: .*/gate_current: null/' \
+       -e 's/^gate_blocked: .*/gate_blocked: false/' \
+       -e 's/^phase: .*/phase: gate-3-passed/' \
+       .claude/toulmin-state.local.md
+     ```
+   - If FAILED:
+     ```bash
+     sed -i.bak \
+       -e 's/^gate_blocked: .*/gate_blocked: true/' \
+       -e 's/^gate_current: .*/gate_current: gate-3/' \
+       .claude/toulmin-state.local.md
+     ```
 2. Report verdict.
 
 Output in the language specified by `lang` field.

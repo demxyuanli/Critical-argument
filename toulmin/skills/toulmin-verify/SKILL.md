@@ -59,8 +59,24 @@ Write `{gate_dir}/gate-2-verification.md` with the following Toulmin structure:
 ## Post-verification
 
 1. Update `.claude/toulmin-state.local.md`:
-   - If PASSED: `gates_passed` append "gate-2", `gate_current` → "gate-3", `gate_blocked` → false
-   - If FAILED: `gate_blocked` → true, `gate_current` → "gate-2"
+   - If PASSED:
+     ```bash
+     # Append gate-2 to gates_passed (handle both empty and non-empty array)
+     sed -i.bak '/^gates_passed: \[.\+\]/ s/^gates_passed: \[\(.*\)\]/gates_passed: [\1, gate-2]/' .claude/toulmin-state.local.md
+     sed -i.bak 's/^gates_passed: \[\]/gates_passed: [gate-2]/' .claude/toulmin-state.local.md
+     sed -i.bak \
+       -e 's/^gate_current: .*/gate_current: gate-3/' \
+       -e 's/^gate_blocked: .*/gate_blocked: false/' \
+       -e 's/^phase: .*/phase: gate-2-passed/' \
+       .claude/toulmin-state.local.md
+     ```
+   - If FAILED:
+     ```bash
+     sed -i.bak \
+       -e 's/^gate_blocked: .*/gate_blocked: true/' \
+       -e 's/^gate_current: .*/gate_current: gate-2/' \
+       .claude/toulmin-state.local.md
+     ```
 2. Report verdict to user.
 3. If FAILED: halt. Do not proceed. Return control to user.
 

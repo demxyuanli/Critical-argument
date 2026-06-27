@@ -16,6 +16,15 @@ fi
 
 # Parse frontmatter fields
 FRONTMATTER=$(sed -n '/^---$/,/^---$/{ /^---$/d; p; }' "$STATE_FILE")
+
+# Session isolation
+STATE_SESSION=$(echo "$FRONTMATTER" | grep '^session_id:' | sed 's/session_id: *//' || true)
+HOOK_SESSION=$(echo "$HOOK_INPUT" | jq -r '.session_id // ""')
+if [[ -n "$STATE_SESSION" ]] && [[ "$STATE_SESSION" != "$HOOK_SESSION" ]]; then
+  echo '{"decision":"allow"}'
+  exit 0
+fi
+
 GATE_BLOCKED=$(echo "$FRONTMATTER" | grep '^gate_blocked:' | sed 's/gate_blocked: *//')
 GATE_CURRENT=$(echo "$FRONTMATTER" | grep '^gate_current:' | sed 's/gate_current: *//' || echo "unknown")
 CA_MODE=$(echo "$FRONTMATTER" | grep '^ca_mode:' | sed 's/ca_mode: *//' || echo "unknown")

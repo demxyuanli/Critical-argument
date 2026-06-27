@@ -37,7 +37,6 @@ gate_current: null
 ca_mode: vibe
 lang: <lang>
 checkpoint_interval: <checkpoint>
-throughput_baseline: null
 ---
 ```
 
@@ -108,7 +107,7 @@ Say: "Vibe assumptions may be breaking. Consider /toulmin-plan to re-establish s
 In vibe mode, gates can be run standalone without the full plan structure:
 
 ### /toulmin-verify (standalone)
-Runs L1-L4 against current code. Creates `docs/toulmin/YYYY-MM-DD-vibe-verify/gate-2-verification.md`. If FAILED: sets `gate_blocked=true`. If you want to continue despite failure: user must explicitly say "override gate block."
+Runs L1-L4 against current code. Creates `docs/toulmin/YYYY-MM-DD-vibe-session/gate-2-verification.md`. If FAILED: sets `gate_blocked=true`.
 
 ### /toulmin-debate (standalone)
 Runs R1-R3 against current or specified code. Creates gate-3-debate.md in the same directory. Same gate_blocked behavior on failure.

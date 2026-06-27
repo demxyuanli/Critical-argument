@@ -13,7 +13,7 @@ Read the current framework state and present it to the user.
 
 1. **Check state file existence**: `test -f .claude/toulmin-state.local.md && echo "EXISTS" || echo "NOT_FOUND"`
 2. **If NOT_FOUND**: Say "No active Toulmin framework session. Start one with /toulmin-plan or /toulmin-vibe."
-3. **If EXISTS**: Read `.claude/toulmin-state.local.md`, then for each gate document in the directory referenced by `gate_dir`, read and summarize. Present:
+3. **If EXISTS**: Read `.claude/toulmin-state.local.md`. If `gate_dir` is null or empty: report "No gate documents yet. Run /toulmin-verify or /toulmin-debate to create gate documents." Otherwise, for each gate document in the directory referenced by `gate_dir`, read and summarize. Present:
 
 ```
 ## Toulmin Framework Status
