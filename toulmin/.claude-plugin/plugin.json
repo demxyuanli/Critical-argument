@@ -1,0 +1,23 @@
+{
+  "name": "toulmin",
+  "version": "1.0.0",
+  "description": "AI-assisted engineering failure-mode detection and intervention framework based on the Toulmin argumentation model. Structured process enforcement, limited verification gates, adversarial debate review, and vibe-coding drift detection.",
+  "author": {
+    "name": "Critical Argument Project"
+  },
+  "homepage": "https://github.com/Critical-argument/toulmin",
+  "repository": "https://github.com/Critical-argument/toulmin",
+  "license": "MIT",
+  "keywords": [
+    "toulmin",
+    "argumentation",
+    "verification",
+    "quality",
+    "process",
+    "debugging",
+    "adversarial-review",
+    "vibe-coding",
+    "drift-detection",
+    "engineering-methodology"
+  ]
+}

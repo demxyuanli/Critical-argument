@@ -1,0 +1,67 @@
+---
+name: toulmin-verify
+description: Execute the Toulmin limited verification protocol (L1-L4) against the current design or implementation. Writes gate-2-verification.md. Called by toulmin-plan at gate-2, or standalone in vibe mode.
+user-invocable: true
+disable-model-invocation: false
+---
+
+# Toulmin Limited Verification (Gate 2)
+
+Execute the four-layer limited verification protocol against the current design or implementation. This is a GATE — failure blocks progress.
+
+## Pre-flight
+
+1. Read `.claude/toulmin-state.local.md` to get `gate_dir`, `lang`, `ca_mode`.
+2. If `gate_dir` is null (vibe mode, no gate dir yet): create `docs/toulmin/YYYY-MM-DD-vibe-session/` and update state file `gate_dir` field.
+3. Confirm target: read the current design artifacts (spec doc, task decomposition, interface contracts, or current code if vibe mode).
+
+## Execution
+
+Execute L1-L4 following the protocol in the toulmin-verifier agent. For each layer:
+
+### L1: Assumption Inventory
+List every assumption the design depends on. For each: what is assumed, what breaks if wrong, risk level (high/medium/low), mitigation or acceptance.
+
+### L2: Boundary Condition Matrix
+Enumerate boundary values for input dimensions, state dimensions, and environment dimensions. Each boundary must have a handling strategy or explicit "not handled" declaration.
+
+### L3: Failure Mode Walkthrough
+For each key module: three most likely failure modes, blast radius, single-point-of-failure check. Mitigation or acceptance for each.
+
+### L4: "One Thing That Kills This Design"
+Identify the single fatal assumption. State confidence level (high/medium/low) with rationale.
+
+## Gate Document
+
+Write `{gate_dir}/gate-2-verification.md` with the following Toulmin structure:
+
+```markdown
+# Gate 2 — Limited Verification — [Date Time]
+
+## Overall Verdict: [PASSED / FAILED]
+
+[For each L1-L4 layer, record findings in Toulmin format]
+
+### L1: Assumption Inventory — [PASSED / FAILED]
+**Claim**: [The assumptions are sufficiently mitigated]
+**Ground**: [Listed assumptions with risk levels]
+**Warrant**: [Why the mitigations are adequate]
+**Rebuttal**: [Challenged assumptions and responses]
+**Qualifier**: [Scope of validity]
+
+[Repeat for L2, L3, L4]
+
+## Actions Required
+[If FAILED: what must change before retry]
+[If PASSED: conditions to monitor in subsequent phases]
+```
+
+## Post-verification
+
+1. Update `.claude/toulmin-state.local.md`:
+   - If PASSED: `gates_passed` append "gate-2", `gate_current` → "gate-3", `gate_blocked` → false
+   - If FAILED: `gate_blocked` → true, `gate_current` → "gate-2"
+2. Report verdict to user.
+3. If FAILED: halt. Do not proceed. Return control to user.
+
+Output in the language specified by `lang` field.

@@ -1,0 +1,90 @@
+---
+name: toulmin-debate
+description: Execute the Toulmin adversarial debate protocol (R1-R3) against completed output. Writes gate-3-debate.md. Called by toulmin-plan at gate-3, or standalone in vibe mode.
+user-invocable: true
+disable-model-invocation: false
+---
+
+# Toulmin Adversarial Debate (Gate 3)
+
+Execute the three-round adversarial debate against the completed output. This is a GATE — failure blocks acceptance. The debate is adversarial by design: Round 1's goal is to REFUTE, not to evaluate.
+
+## Pre-flight
+
+1. Read `.claude/toulmin-state.local.md` to get `gate_dir` and `lang`.
+2. Identify review target: recently modified code files, or specific files mentioned by user.
+3. Read the original requirements/spec (if available) to use as correctness baseline.
+
+## Execution
+
+### Round 1: Structural Challenge (as adversarial reviewer)
+
+**YOU are now the adversary.** Your goal is to find concrete, verifiable defects. Use the toulmin-debater agent to perform the R1 scan, OR execute it yourself following the same protocol.
+
+Attack dimensions (in order):
+- **D1 Correctness**: Any input producing wrong output?
+- **D2 Completeness**: All stated requirements covered?
+- **D3 Consistency**: Internal contradictions?
+- **D4 Robustness**: Behavior under boundary conditions defined?
+- **D5 Security**: Exploitable vulnerabilities?
+- **D6 Maintainability**: Cascading-change risk?
+
+For each finding: location + attack scenario + observed behavior + expected behavior + severity.
+
+Present all findings to the user. Wait for acknowledgment before Round 2.
+
+### Round 2: Response
+
+For each Round 1 finding, respond:
+- **[ACCEPT]**: Real defect. Fix: [description].
+- **[REBUT]**: Challenge invalid because [evidence].
+- **[CLARIFY]**: Challenge based on misunderstanding. Actual behavior: [explanation].
+- **[DEMOTE]**: Known limitation, explicitly declared as not handled.
+
+Forbidden responses:
+- **[IGNORE]**: No response = default accept.
+- **[VAGUE]**: "This should be fine" = treated as no response.
+
+Apply fixes for all ACCEPT items before Round 3.
+
+### Round 3: Rebuttal + Verdict
+
+Take the REBUT and CLARIFY items from Round 2. Re-examine each:
+- Challenge sustained → escalate to ACCEPT (must fix)
+- Challenge withdrawn → accepted rebuttal
+
+**Verdict**:
+- ✅ **PASSED**: All ACCEPT items fixed. All sustained challenges have explicit risk acceptance. No unanswered challenges.
+- ⚠️ **CONDITIONAL PASS**: Sustained challenges exist but blast radius is contained. Challenges tagged for regression monitoring.
+- ❌ **FAILED**: Unaddressed ACCEPT-level defects remain. Sustained challenges affect core functionality. A "kill the design"-level defect was discovered.
+
+## Gate Document
+
+Write `{gate_dir}/gate-3-debate.md`:
+
+```markdown
+# Gate 3 — Adversarial Debate — [Date Time]
+
+## Verdict: [PASSED / CONDITIONAL PASS / FAILED]
+
+### R1: Structural Challenge
+[D1-D6 findings with Toulmin structure for each]
+
+### R2: Response
+[ACCEPT/REBUT/CLARIFY/DEMOTE per finding, with evidence]
+
+### R3: Rebuttal + Verdict
+[Final disposition of each disputed finding]
+
+## Actions Required
+[Fix list, monitoring tags, risk acceptances]
+```
+
+## Post-debate
+
+1. Update `.claude/toulmin-state.local.md`:
+   - If PASSED/CONDITIONAL: `gates_passed` append "gate-3", `gate_current` → null, `gate_blocked` → false
+   - If FAILED: `gate_blocked` → true, `gate_current` → "gate-3"
+2. Report verdict.
+
+Output in the language specified by `lang` field.
