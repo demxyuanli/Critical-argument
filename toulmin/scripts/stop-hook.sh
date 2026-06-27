@@ -22,9 +22,8 @@ fi
 
 # Validate iteration is numeric
 if [[ ! "$STATE_ITERATION" =~ ^[0-9]+$ ]]; then
-  echo "⚠️  Toulmin: State file corrupted (iteration=$STATE_ITERATION). Removing state file to stop interventions." >&2
-  echo "   Run /toulmin-plan or /toulmin-vibe to start fresh." >&2
-  rm -f "$STATE_FILE" 2>/dev/null || true
+  echo "⚠️  Toulmin: State file corrupted (iteration=$STATE_ITERATION). Resetting iteration to 0." >&2
+  sed -i.bak 's/^iteration: .*/iteration: 0/' "$STATE_FILE" 2>/dev/null || true
   exit 0
 fi
 

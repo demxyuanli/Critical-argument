@@ -118,15 +118,9 @@ Write `{gate_dir}/gate-1-convergence.md`:
 ## Verdict: PASSED
 ```
 
-Update state file: `gates_passed: [gate-1]`, `gate_current: gate-2`, `phase: gate-2`.
-
+Use the shared gate updater:
 ```bash
-# Atomic update — use sed to avoid overwriting iteration counter
-sed -i.bak \
-  -e 's/^gates_passed: .*/gates_passed: [gate-1]/' \
-  -e 's/^gate_current: .*/gate_current: gate-2/' \
-  -e 's/^phase: .*/phase: gate-2/' \
-  .claude/toulmin-state.local.md
+bash "${CLAUDE_PLUGIN_ROOT}/scripts/update-gate.sh" gate-1 passed gate-2 gate-2
 ```
 
 # Gate 2 — Limited Verification

@@ -28,12 +28,10 @@ if [[ "$STATE_GATE_BLOCKED" != "true" ]]; then
 fi
 
 # Gate blocked — build reason message
-TOOL_NAME=$(echo "$HOOK_INPUT" | jq -r '.tool_name // "unknown"')
-
 if [[ "$STATE_LANG" == "zh" ]]; then
-  REASON="⛔ Gate拦截: ${STATE_GATE_CURRENT} 未通过。模式: ${STATE_CA_MODE}。运行 /toulmin-status 查看详情，或完成当前gate验证后重试。"
+  REASON="⛔ Gate拦截: ${STATE_GATE_CURRENT} 未通过。模式: ${STATE_CA_MODE}。运行 /toulmin-status 查看详情。解除拦截: rm -f .claude/toulmin-state.local.md 或完成gate验证。"
 else
-  REASON="⛔ Gate blocked: ${STATE_GATE_CURRENT} not passed. Mode: ${STATE_CA_MODE}. Run /toulmin-status for details, or complete the current gate verification and retry."
+  REASON="⛔ Gate blocked: ${STATE_GATE_CURRENT} not passed. Mode: ${STATE_CA_MODE}. Run /toulmin-status for details. To unblock: rm -f .claude/toulmin-state.local.md or complete the gate verification."
 fi
 
 jq -n \

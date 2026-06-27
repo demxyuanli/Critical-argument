@@ -86,7 +86,7 @@ Write `{gate_dir}/gate-3-debate.md`:
 1. Update `.claude/toulmin-state.local.md`:
    - If PASSED/CONDITIONAL:
      ```bash
-     bash "${CLAUDE_PLUGIN_ROOT}/scripts/update-gate.sh" gate-3 passed null gate-3-passed
+     bash "${CLAUDE_PLUGIN_ROOT}/scripts/update-gate.sh" gate-3 passed "" gate-3-passed
      ```
    - If FAILED:
      ```bash
