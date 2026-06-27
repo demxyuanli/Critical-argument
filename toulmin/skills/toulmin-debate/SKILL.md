@@ -12,8 +12,9 @@ Execute the three-round adversarial debate against the completed output. This is
 ## Pre-flight
 
 1. Read `.claude/toulmin-state.local.md` to get `gate_dir` and `lang`.
-2. Identify review target: recently modified code files, or specific files mentioned by user.
-3. Read the original requirements/spec (if available) to use as correctness baseline.
+2. If `gate_dir` is null (vibe mode, no gate dir yet): create `docs/toulmin/YYYY-MM-DD-vibe-session/` and update state file `gate_dir` field.
+3. Identify review target: recently modified code files, or specific files mentioned by user.
+4. Read the original requirements/spec (if available) to use as correctness baseline.
 
 ## Execution
 
@@ -85,9 +86,11 @@ Write `{gate_dir}/gate-3-debate.md`:
 1. Update `.claude/toulmin-state.local.md`:
    - If PASSED/CONDITIONAL:
      ```bash
-     # Append gate-3 to gates_passed (handle both empty and non-empty array)
-     sed -i.bak '/^gates_passed: \[.\+\]/ s/^gates_passed: \[\(.*\)\]/gates_passed: [\1, gate-3]/' .claude/toulmin-state.local.md
-     sed -i.bak 's/^gates_passed: \[\]/gates_passed: [gate-3]/' .claude/toulmin-state.local.md
+     # Idempotent append gate-3 to gates_passed (skip if already present)
+     if ! grep -q 'gate-3' .claude/toulmin-state.local.md; then
+       sed -i.bak '/^gates_passed: \[.\+\]/ s/^gates_passed: \[\(.*\)\]/gates_passed: [\1, gate-3]/' .claude/toulmin-state.local.md
+       sed -i.bak 's/^gates_passed: \[\]/gates_passed: [gate-3]/' .claude/toulmin-state.local.md
+     fi
      sed -i.bak \
        -e 's/^gate_current: .*/gate_current: null/' \
        -e 's/^gate_blocked: .*/gate_blocked: false/' \
@@ -99,6 +102,7 @@ Write `{gate_dir}/gate-3-debate.md`:
      sed -i.bak \
        -e 's/^gate_blocked: .*/gate_blocked: true/' \
        -e 's/^gate_current: .*/gate_current: gate-3/' \
+       -e 's/^phase: .*/phase: gate-3-failed/' \
        .claude/toulmin-state.local.md
      ```
 2. Report verdict.

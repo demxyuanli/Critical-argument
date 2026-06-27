@@ -61,9 +61,11 @@ Write `{gate_dir}/gate-2-verification.md` with the following Toulmin structure:
 1. Update `.claude/toulmin-state.local.md`:
    - If PASSED:
      ```bash
-     # Append gate-2 to gates_passed (handle both empty and non-empty array)
-     sed -i.bak '/^gates_passed: \[.\+\]/ s/^gates_passed: \[\(.*\)\]/gates_passed: [\1, gate-2]/' .claude/toulmin-state.local.md
-     sed -i.bak 's/^gates_passed: \[\]/gates_passed: [gate-2]/' .claude/toulmin-state.local.md
+     # Idempotent append gate-2 to gates_passed (skip if already present)
+     if ! grep -q 'gate-2' .claude/toulmin-state.local.md; then
+       sed -i.bak '/^gates_passed: \[.\+\]/ s/^gates_passed: \[\(.*\)\]/gates_passed: [\1, gate-2]/' .claude/toulmin-state.local.md
+       sed -i.bak 's/^gates_passed: \[\]/gates_passed: [gate-2]/' .claude/toulmin-state.local.md
+     fi
      sed -i.bak \
        -e 's/^gate_current: .*/gate_current: gate-3/' \
        -e 's/^gate_blocked: .*/gate_blocked: false/' \
@@ -75,6 +77,7 @@ Write `{gate_dir}/gate-2-verification.md` with the following Toulmin structure:
      sed -i.bak \
        -e 's/^gate_blocked: .*/gate_blocked: true/' \
        -e 's/^gate_current: .*/gate_current: gate-2/' \
+       -e 's/^phase: .*/phase: gate-2-failed/' \
        .claude/toulmin-state.local.md
      ```
 2. Report verdict to user.
