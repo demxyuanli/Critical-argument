@@ -86,24 +86,11 @@ Write `{gate_dir}/gate-3-debate.md`:
 1. Update `.claude/toulmin-state.local.md`:
    - If PASSED/CONDITIONAL:
      ```bash
-     # Idempotent append gate-3 to gates_passed (skip if already present)
-     if ! grep -q 'gate-3' .claude/toulmin-state.local.md; then
-       sed -i.bak '/^gates_passed: \[.\+\]/ s/^gates_passed: \[\(.*\)\]/gates_passed: [\1, gate-3]/' .claude/toulmin-state.local.md
-       sed -i.bak 's/^gates_passed: \[\]/gates_passed: [gate-3]/' .claude/toulmin-state.local.md
-     fi
-     sed -i.bak \
-       -e 's/^gate_current: .*/gate_current: null/' \
-       -e 's/^gate_blocked: .*/gate_blocked: false/' \
-       -e 's/^phase: .*/phase: gate-3-passed/' \
-       .claude/toulmin-state.local.md
+     bash "${CLAUDE_PLUGIN_ROOT}/scripts/update-gate.sh" gate-3 passed null gate-3-passed
      ```
    - If FAILED:
      ```bash
-     sed -i.bak \
-       -e 's/^gate_blocked: .*/gate_blocked: true/' \
-       -e 's/^gate_current: .*/gate_current: gate-3/' \
-       -e 's/^phase: .*/phase: gate-3-failed/' \
-       .claude/toulmin-state.local.md
+     bash "${CLAUDE_PLUGIN_ROOT}/scripts/update-gate.sh" gate-3 failed
      ```
 2. Report verdict.
 

@@ -6,32 +6,23 @@
 set -euo pipefail
 
 HOOK_INPUT=$(cat)
-STATE_FILE=".claude/toulmin-state.local.md"
+# Load shared state reader
+source "${CLAUDE_PLUGIN_ROOT}/scripts/lib/state.sh"
 
 # No state file → no framework active → allow
-if [[ ! -f "$STATE_FILE" ]]; then
+if ! read_toulmin_state; then
   echo '{"decision":"allow"}'
   exit 0
 fi
 
-# Parse frontmatter fields
-FRONTMATTER=$(sed -n '/^---$/,/^---$/{ /^---$/d; p; }' "$STATE_FILE")
-
-# Session isolation
-STATE_SESSION=$(echo "$FRONTMATTER" | grep '^session_id:' | sed 's/session_id: *//' || true)
-HOOK_SESSION=$(echo "$HOOK_INPUT" | jq -r '.session_id // ""')
-if [[ -n "$STATE_SESSION" ]] && [[ "$STATE_SESSION" != "$HOOK_SESSION" ]]; then
+# Session isolation — skip enforcement for other sessions
+if session_is_different "$HOOK_INPUT"; then
   echo '{"decision":"allow"}'
   exit 0
 fi
-
-GATE_BLOCKED=$(echo "$FRONTMATTER" | grep '^gate_blocked:' | sed 's/gate_blocked: *//')
-GATE_CURRENT=$(echo "$FRONTMATTER" | grep '^gate_current:' | sed 's/gate_current: *//' || echo "unknown")
-CA_MODE=$(echo "$FRONTMATTER" | grep '^ca_mode:' | sed 's/ca_mode: *//' || echo "unknown")
-LANG=$(echo "$FRONTMATTER" | grep '^lang:' | sed 's/lang: *//' || echo "en")
 
 # Gate not blocked → allow
-if [[ "$GATE_BLOCKED" != "true" ]]; then
+if [[ "$STATE_GATE_BLOCKED" != "true" ]]; then
   echo '{"decision":"allow"}'
   exit 0
 fi
@@ -39,10 +30,10 @@ fi
 # Gate blocked — build reason message
 TOOL_NAME=$(echo "$HOOK_INPUT" | jq -r '.tool_name // "unknown"')
 
-if [[ "$LANG" == "zh" ]]; then
-  REASON="⛔ Gate拦截: ${GATE_CURRENT} 未通过。模式: ${CA_MODE}。运行 /toulmin-status 查看详情，或完成当前gate验证后重试。"
+if [[ "$STATE_LANG" == "zh" ]]; then
+  REASON="⛔ Gate拦截: ${STATE_GATE_CURRENT} 未通过。模式: ${STATE_CA_MODE}。运行 /toulmin-status 查看详情，或完成当前gate验证后重试。"
 else
-  REASON="⛔ Gate blocked: ${GATE_CURRENT} not passed. Mode: ${CA_MODE}. Run /toulmin-status for details, or complete the current gate verification and retry."
+  REASON="⛔ Gate blocked: ${STATE_GATE_CURRENT} not passed. Mode: ${STATE_CA_MODE}. Run /toulmin-status for details, or complete the current gate verification and retry."
 fi
 
 jq -n \
