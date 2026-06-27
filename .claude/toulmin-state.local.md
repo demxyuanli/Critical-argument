@@ -1,11 +1,11 @@
 ---
 gate_blocked: false
-phase: gate-3
+phase: regression
 session_id: ${CLAUDE_CODE_SESSION_ID}
 iteration: 0
 gate_dir: docs/toulmin/2026-06-27-toulmin-plugin-critical-review/
 gates_passed: [gate-1, gate-2]
-gate_current: gate-3
+gate_current: null
 ca_mode: structured
 lang: zh
 checkpoint_interval: 0
