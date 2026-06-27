@@ -1,0 +1,5 @@
+{
+  "plugins": [
+    { "type": "local", "path": "./toulmin" }
+  ]
+}
