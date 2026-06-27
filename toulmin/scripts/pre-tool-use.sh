@@ -1,5 +1,5 @@
 #!/bin/bash
-# Toulmin Framework — PreToolUse Hook
+# Toulmin Critical Argumentation — PreToolUse Hook
 # Intercepts Write/Edit when gate_blocked=true in state file.
 # Blocks coding tools until the active gate is cleared.
 

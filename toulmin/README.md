@@ -1,6 +1,6 @@
-# Toulmin — AI辅助工程失效模式检测与干预框架
+# Toulmin — 批判性论证框架
 
-基于[图尔敏论证模型](https://en.wikipedia.org/wiki/Stephen_Toulmin)的Claude Code插件。它将"编码前的有限验证"和"验收前的反方辩论"制度化为三个刚性Gate，在vibe coding中通过L0信号检测和自动checkpoint识别漂移。
+基于[图尔敏论证模型](https://en.wikipedia.org/wiki/Stephen_Toulmin)的Claude Code插件。将"编码前的有限验证"和"验收前的反方辩论"制度化为三个刚性Gate，在vibe coding中通过L0信号检测和自动checkpoint识别漂移。核心方法论：**Toulmin 批判性论证**。
 
 ---
 

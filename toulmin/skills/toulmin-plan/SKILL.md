@@ -1,6 +1,6 @@
 ---
 name: toulmin-plan
-description: Start a structured Toulmin-framework task. Plan→Task→Target→Gate1→Verify→Gate2→Code→Verify→Debate→Gate3→Regression. Use for non-trivial tasks with 3+ steps, multi-module impact, or irreversible decisions.
+description: Start a structured Toulmin critical argumentation task. Plan→Task→Target→Gate1→Verify→Gate2→Code→Verify→Debate→Gate3→Regression. Use for non-trivial tasks with 3+ steps, multi-module impact, or irreversible decisions.
 user-invocable: true
 argument-hint: "<task description> [--lang zh|en]"
 disable-model-invocation: false
@@ -8,7 +8,7 @@ disable-model-invocation: false
 
 # Toulmin Plan — Structured Task Execution
 
-Execute a task through the Toulmin framework's structured process chain with three argumentation gates. Each gate produces a documented Toulmin-format argument before the next phase can begin.
+Execute a task through the Toulmin critical argumentation structured process chain with three argumentation gates. Each gate produces a documented Toulmin-format argument before the next phase can begin.
 
 ## Phase 0: Initialization
 

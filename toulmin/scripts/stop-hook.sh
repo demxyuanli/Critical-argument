@@ -1,5 +1,5 @@
 #!/bin/bash
-# Toulmin Framework — Stop Hook
+# Toulmin Critical Argumentation — Stop Hook
 # Responsibilities:
 #   1. Iteration counting (every stop increments counter)
 #   2. Completion enforcement (gate_blocked=true → block stop)

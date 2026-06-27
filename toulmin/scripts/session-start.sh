@@ -1,5 +1,5 @@
 #!/bin/bash
-# Toulmin Framework — SessionStart Hook
+# Toulmin Critical Argumentation — SessionStart Hook
 # Injects a minimal recovery pointer when state file exists.
 # Claude reads the pointer, then reads the state file + gate docs for full context.
 

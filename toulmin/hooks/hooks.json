@@ -1,5 +1,5 @@
 {
-  "description": "Toulmin framework hooks: gate-blocked tool interception, iteration counting, completion enforcement, and session recovery",
+  "description": "Toulmin critical argumentation hooks: gate-blocked tool interception, iteration counting, completion enforcement, and session recovery",
   "hooks": {
     "PreToolUse": [
       {
