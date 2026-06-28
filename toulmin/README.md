@@ -175,6 +175,9 @@ toulmin/
 ├── hooks/
 │   └── hooks.json                # 3个hook注册
 ├── scripts/
+│   ├── lib/
+│   │   └── state.sh              #   共享state解析 + session隔离 + 默认值
+│   ├── update-gate.sh            #   统一gate状态更新（原子sed）
 │   ├── pre-tool-use.sh           #   gate_blocked=true → deny Write/Edit
 │   ├── stop-hook.sh              #   轮次计数 + 完成拦截 + checkpoint注入
 │   └── session-start.sh          #   恢复指针 addContext
@@ -191,6 +194,10 @@ toulmin/
 **grill-me模式**（纯prompt驱动）: 5个技能 + 2个agent。对话引导通过语言约束实现，不需要hook。
 
 **ralph-loop模式**（hook + state file）: 3个hook脚本 + `.claude/toulmin-state.local.md`。硬性拦截需要生命周期拦截；状态需要跨轮次持久化。
+
+**共享基础设施**:
+- `scripts/lib/state.sh` — 统一frontmatter解析、session隔离、字段默认值。3个hook通过 `source` 复用。
+- `scripts/update-gate.sh` — 统一gate状态更新。原子sed操作，幂等追加，gate名白名单校验。toulmin-plan/verify/debate通过 `${CLAUDE_PLUGIN_ROOT}` 调用。
 
 **state file设计** — 最小化，仅存hook决策字段:
 ```yaml
