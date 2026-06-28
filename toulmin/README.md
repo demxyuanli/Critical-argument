@@ -1,6 +1,6 @@
 # Toulmin — 批判性论证框架
 
-[English](README.en.md)
+[English](README.en.md) | [日本語](README.ja.md)
 
 基于[图尔敏论证模型](https://en.wikipedia.org/wiki/Stephen_Toulmin)的Claude Code插件。将"编码前的有限验证"和"验收前的反方辩论"制度化为三个刚性Gate，在vibe coding中通过L0信号检测和自动checkpoint识别漂移。核心方法论：**Toulmin 批判性论证**。
 

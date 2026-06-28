@@ -2,7 +2,7 @@
 
 A Claude Code plugin based on the [Toulmin Argumentation Model](https://en.wikipedia.org/wiki/Stephen_Toulmin). Institutionalizes "limited verification before coding" and "adversarial debate before acceptance" as three rigid Gates. In vibe coding, detects drift through L0 signal monitoring and automatic checkpoints. Core methodology: **Toulmin Critical Argumentation**.
 
-[中文](README.md)
+[中文](README.md) | [日本語](README.ja.md)
 
 ---
 
