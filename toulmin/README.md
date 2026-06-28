@@ -1,5 +1,7 @@
 # Toulmin — 批判性论证框架
 
+[English](README.en.md)
+
 基于[图尔敏论证模型](https://en.wikipedia.org/wiki/Stephen_Toulmin)的Claude Code插件。将"编码前的有限验证"和"验收前的反方辩论"制度化为三个刚性Gate，在vibe coding中通过L0信号检测和自动checkpoint识别漂移。核心方法论：**Toulmin 批判性论证**。
 
 ---
@@ -240,7 +242,7 @@ Toulmin独立运行，不依赖brainstorming或其他工具。如果项目已有
 > 上游设计文档: docs/superpowers/specs/2026-06-27-role-based-auth-design.md
 ```
 
-没有上游 → 独立运行。CA框架解耦。
+没有上游 → 独立运行。Toulmin框架解耦。
 
 ---
 
