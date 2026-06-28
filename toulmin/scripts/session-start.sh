@@ -19,12 +19,19 @@ else
   LABELS=("State" "Mode" "Phase" "Gate" "Iteration" "Gate docs" "for full status")
 fi
 
-GATE_COUNT=$(gate_count)
+CLAIMED=$(gate_count)
+VERIFIED=$(verified_gate_count)
+
+GATE_DISPLAY="${CLAIMED}/3 passed"
+if [[ $VERIFIED -ne $CLAIMED ]] && [[ -n "${STATE_GATE_DIR:-}" ]]; then
+  # State file claims more passed gates than verified in gate docs — may be stale
+  GATE_DISPLAY="${VERIFIED}/3 verified (state file claims ${CLAIMED})"
+fi
 
 PARTS=("[Toulmin] ${LABELS[0]}: ${STATE_FILE}")
 PARTS+=("${LABELS[1]}: ${STATE_CA_MODE}")
 PARTS+=("${LABELS[2]}: ${STATE_PHASE}")
-PARTS+=("${LABELS[3]}: ${GATE_COUNT}/3 passed")
+PARTS+=("${LABELS[3]}: ${GATE_DISPLAY}")
 PARTS+=("${LABELS[4]}: ${STATE_ITERATION}")
 [[ -n "${STATE_GATE_DIR:-}" ]] && PARTS+=("${LABELS[5]}: ${STATE_GATE_DIR}")
 PARTS+=("/toulmin-status ${LABELS[6]}")

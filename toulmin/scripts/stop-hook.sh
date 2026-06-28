@@ -37,6 +37,24 @@ mv "$TEMP_FILE" "$STATE_FILE"
 
 # Condition 1: gate_blocked → block completion
 if [[ "$STATE_GATE_BLOCKED" == "true" ]]; then
+  # Consistency check: does gate doc actually say FAILED?
+  if ! verify_gate_blocked_consistency; then
+    # State file may be stale — soft warning instead of hard block
+    if [[ "$STATE_LANG" == "zh" ]]; then
+      SYSTEM_MSG="⚠️ 状态文件显示 ${STATE_GATE_CURRENT} 未通过，但gate文档缺失或不一致。state file可能过时。建议运行 /toulmin-status 检查。"
+    else
+      SYSTEM_MSG="⚠️ State file says ${STATE_GATE_CURRENT} not passed, but gate document is missing or inconsistent. State file may be stale. Run /toulmin-status to check."
+    fi
+    jq -n \
+      --arg msg "$SYSTEM_MSG" \
+      '{
+        "decision": "block",
+        "reason": "State file inconsistency detected. Run /toulmin-status.",
+        "systemMessage": $msg
+      }'
+    exit 0
+  fi
+
   if [[ "$STATE_LANG" == "zh" ]]; then
     SYSTEM_MSG="⛔ 不能声称完成: ${STATE_GATE_CURRENT} 未通过。运行 /toulmin-status 查看详情，或 /toulmin-verify 执行验证。"
     REASON="Gate ${STATE_GATE_CURRENT} 未通过，请先完成当前gate验证。"

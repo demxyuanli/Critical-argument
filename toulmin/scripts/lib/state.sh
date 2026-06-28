@@ -59,3 +59,48 @@ gate_count() {
     echo "${STATE_GATES_PASSED}" | tr -cd ',' | wc -c | awk '{print $1 + 1}'
   fi
 }
+
+# --- Consistency verification (Approach A) ---
+
+# Verify gate_blocked=true is backed by a real gate document containing FAILED.
+# Returns 0 if consistent, 1 if state file may be stale.
+verify_gate_blocked_consistency() {
+  [[ "${STATE_GATE_BLOCKED:-false}" != "true" ]] && return 0
+  [[ -z "${STATE_GATE_DIR:-}" || -z "${STATE_GATE_CURRENT:-}" ]] && return 1
+
+  local gate_num="${STATE_GATE_CURRENT#gate-}"
+  local gate_doc
+  case "$gate_num" in
+    1) gate_doc="gate-1-convergence.md" ;;
+    2) gate_doc="gate-2-verification.md" ;;
+    3) gate_doc="gate-3-debate.md" ;;
+    *) return 1 ;;
+  esac
+
+  local doc_path="${STATE_GATE_DIR%/}/${gate_doc}"
+  [[ -f "$doc_path" ]] || return 1
+  grep -qi 'FAILED' "$doc_path" 2>/dev/null || return 1
+  return 0
+}
+
+# Count gates_passed entries that have a verified PASSED gate document.
+verified_gate_count() {
+  local verified=0
+  local gate_dir="${STATE_GATE_DIR:-}"
+  [[ -z "$gate_dir" || ! -d "$gate_dir" ]] && echo 0 && return
+
+  local gate_num gate_doc
+  for gate_num in 1 2 3; do
+    if echo "${STATE_GATES_PASSED:-}" | grep -q "gate-${gate_num}"; then
+      case "$gate_num" in
+        1) gate_doc="gate-1-convergence.md" ;;
+        2) gate_doc="gate-2-verification.md" ;;
+        3) gate_doc="gate-3-debate.md" ;;
+      esac
+      if [[ -f "${gate_dir%/}/${gate_doc}" ]] && grep -qi 'PASSED' "${gate_dir%/}/${gate_doc}" 2>/dev/null; then
+        verified=$((verified + 1))
+      fi
+    fi
+  done
+  echo $verified
+}
