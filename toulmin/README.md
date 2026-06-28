@@ -155,6 +155,7 @@ claude --plugin-dir ./toulmin
 | `/toulmin:toulmin-verify` | L1-L4有限验证（Gate 2） | plan委托 / vibe独立 |
 | `/toulmin:toulmin-debate` | R1-R3反方辩论（Gate 3） | plan委托 / vibe独立 |
 | `/toulmin:toulmin-status` | 查看框架状态（只读） | 手动 / checkpoint |
+| `/toulmin:toulmin-override "理由"` | 手动驳回失败gate（记录风险接受） | 手动 |
 
 **使用示例**:
 ```bash
@@ -214,6 +215,7 @@ gate_current: gate-2    # 当前活跃gate
 ca_mode: structured     # structured | vibe
 lang: zh                # 对话语言
 checkpoint_interval: 20 # vibe checkpoint间隔（0=禁用）
+gate_attempts: 0        # 当前gate连续尝试次数（仅提示）
 ---
 ```
 

@@ -37,6 +37,7 @@ gate_current: null
 ca_mode: vibe
 lang: <lang>
 checkpoint_interval: <checkpoint>
+gate_attempts: 0
 ---
 ```
 

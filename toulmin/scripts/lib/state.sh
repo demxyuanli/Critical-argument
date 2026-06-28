@@ -27,6 +27,7 @@ read_toulmin_state() {
   STATE_GATES_PASSED=$(state_field "gates_passed")
   STATE_GATE_DIR=$(state_field "gate_dir")
   STATE_CHECKPOINT_INTERVAL=$(state_field "checkpoint_interval")
+  STATE_GATE_ATTEMPTS=$(state_field "gate_attempts")
 
   # Apply defaults for unset fields
   : "${STATE_GATE_BLOCKED:=false}"
@@ -38,6 +39,7 @@ read_toulmin_state() {
   : "${STATE_CHECKPOINT_INTERVAL:=0}"
   : "${STATE_GATE_CURRENT:=none}"
   : "${STATE_GATE_DIR:=}"
+  : "${STATE_GATE_ATTEMPTS:=0}"
 
   return 0
 }

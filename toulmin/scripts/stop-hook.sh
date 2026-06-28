@@ -56,10 +56,10 @@ if [[ "$STATE_GATE_BLOCKED" == "true" ]]; then
   fi
 
   if [[ "$STATE_LANG" == "zh" ]]; then
-    SYSTEM_MSG="⛔ 不能声称完成: ${STATE_GATE_CURRENT} 未通过。运行 /toulmin-status 查看详情，或 /toulmin-verify 执行验证。"
+    SYSTEM_MSG="⛔ 不能声称完成: ${STATE_GATE_CURRENT} 未通过（第${STATE_GATE_ATTEMPTS}次尝试）。运行 /toulmin-status 查看详情。驳回: /toulmin-override \"理由\"。"
     REASON="Gate ${STATE_GATE_CURRENT} 未通过，请先完成当前gate验证。"
   else
-    SYSTEM_MSG="⛔ Cannot claim completion: ${STATE_GATE_CURRENT} not passed. Run /toulmin-status for details, or /toulmin-verify to execute verification."
+    SYSTEM_MSG="⛔ Cannot claim completion: ${STATE_GATE_CURRENT} not passed (attempt #${STATE_GATE_ATTEMPTS}). Run /toulmin-status for details. Override: /toulmin-override \"reason\"."
     REASON="Gate ${STATE_GATE_CURRENT} not passed. Complete the current gate verification first."
   fi
   jq -n \

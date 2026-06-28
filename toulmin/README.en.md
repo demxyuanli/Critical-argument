@@ -155,6 +155,7 @@ claude --plugin-dir ./toulmin
 | `/toulmin:toulmin-verify` | L1-L4 verification (Gate 2) | Plan delegate / vibe standalone |
 | `/toulmin:toulmin-debate` | R1-R3 debate (Gate 3) | Plan delegate / vibe standalone |
 | `/toulmin:toulmin-status` | View framework status (read-only) | Manual / checkpoint |
+| `/toulmin:toulmin-override "reason"` | Manually override failed gate (records risk acceptance) | Manual |
 
 ---
 
@@ -209,6 +210,7 @@ gate_current: gate-2    # Active gate
 ca_mode: structured     # structured | vibe
 lang: zh                # Output language
 checkpoint_interval: 20 # Vibe checkpoint interval (0=disabled)
+gate_attempts: 0        # Gate retry counter (display only, no automatic behavior)
 ---
 ```
 

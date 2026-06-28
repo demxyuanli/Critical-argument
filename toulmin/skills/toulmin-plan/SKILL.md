@@ -41,6 +41,7 @@ gate_current: gate-1
 ca_mode: structured
 lang: <lang>
 checkpoint_interval: 0
+gate_attempts: 0
 ---
 ```
 

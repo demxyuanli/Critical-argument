@@ -45,14 +45,20 @@ if [[ "$VERDICT" == "passed" ]]; then
 
   SED_EXPRS+=(-e 's/^gate_blocked: .*/gate_blocked: false/')
   SED_EXPRS+=(-e "s/^phase: .*/phase: ${NEXT_PHASE}/")
+  SED_EXPRS+=(-e 's/^gate_attempts: .*/gate_attempts: 0/')
 
   sed -i.bak "${SED_EXPRS[@]}" "$STATE_FILE"
 
 elif [[ "$VERDICT" == "failed" ]]; then
+  # Increment gate attempt counter
+  local cur_attempts
+  cur_attempts=$(grep '^gate_attempts:' "$STATE_FILE" | sed 's/gate_attempts: *//' || echo 0)
+  cur_attempts=$((cur_attempts + 1))
   sed -i.bak \
     -e 's/^gate_blocked: .*/gate_blocked: true/' \
     -e "s/^gate_current: .*/gate_current: ${GATE}/" \
     -e "s/^phase: .*/phase: ${GATE}-failed/" \
+    -e "s/^gate_attempts: .*/gate_attempts: ${cur_attempts}/" \
     "$STATE_FILE"
 else
   echo "⚠️  update-gate.sh: Invalid verdict '$VERDICT' (expected 'passed' or 'failed')" >&2

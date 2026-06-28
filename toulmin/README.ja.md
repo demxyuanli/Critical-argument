@@ -155,6 +155,7 @@ claude --plugin-dir ./toulmin
 | `/toulmin:toulmin-verify` | L1-L4検証（Gate 2） | Plan委譲 / vibe単独 |
 | `/toulmin:toulmin-debate` | R1-R3討論（Gate 3） | Plan委譲 / vibe単独 |
 | `/toulmin:toulmin-status` | フレームワーク状態表示（読取専用） | 手動 / チェックポイント |
+| `/toulmin:toulmin-override "理由"` | 失敗gateの手動却下（リスク受諾を記録） | 手動 |
 
 ---
 
@@ -210,6 +211,7 @@ gate_current: gate-2    # アクティブgate
 ca_mode: structured     # structured | vibe
 lang: zh                # 出力言語
 checkpoint_interval: 20 # vibeチェックポイント間隔（0=無効）
+gate_attempts: 0        # gate再試行カウンタ（表示のみ、自動動作なし）
 ---
 ```
 

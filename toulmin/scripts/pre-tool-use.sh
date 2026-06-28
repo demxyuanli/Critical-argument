@@ -29,9 +29,9 @@ fi
 
 # Gate blocked — build reason message
 if [[ "$STATE_LANG" == "zh" ]]; then
-  REASON="⛔ Gate拦截: ${STATE_GATE_CURRENT} 未通过。模式: ${STATE_CA_MODE}。运行 /toulmin-status 查看详情。解除拦截: rm -f .claude/toulmin-state.local.md 或完成gate验证。"
+  REASON="⛔ Gate拦截: ${STATE_GATE_CURRENT} 未通过（第${STATE_GATE_ATTEMPTS}次尝试）。运行 /toulmin-status 查看详情。驳回: /toulmin-override \"理由\"。手动解除: rm -f .claude/toulmin-state.local.md。"
 else
-  REASON="⛔ Gate blocked: ${STATE_GATE_CURRENT} not passed. Mode: ${STATE_CA_MODE}. Run /toulmin-status for details. To unblock: rm -f .claude/toulmin-state.local.md or complete the gate verification."
+  REASON="⛔ Gate blocked: ${STATE_GATE_CURRENT} not passed (attempt #${STATE_GATE_ATTEMPTS}). Run /toulmin-status for details. Override: /toulmin-override \"reason\". Manual unblock: rm -f .claude/toulmin-state.local.md."
 fi
 
 jq -n \
