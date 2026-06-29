@@ -36,6 +36,7 @@ Continue? (yes/no)
 ### Step 2: Append override to gate document
 
 Determine which gate document to update:
+- gate-1 → `{gate_dir}/gate-1-convergence.md`
 - gate-2 → `{gate_dir}/gate-2-verification.md`
 - gate-3 → `{gate_dir}/gate-3-debate.md`
 
@@ -53,7 +54,7 @@ Append to the end of the document:
 
 Use Bash to append:
 ```bash
-cat >> "{gate_dir}/{gate_doc}" << 'EOF'
+cat >> "{gate_dir}/{gate_doc}" << EOF
 
 ---
 
@@ -72,6 +73,7 @@ bash "${CLAUDE_PLUGIN_ROOT}/scripts/update-gate.sh" <gate-name> passed <next-gat
 ```
 
 Gate mapping:
+- gate-1 → `bash "${CLAUDE_PLUGIN_ROOT}/scripts/update-gate.sh" gate-1 passed gate-2 gate-1-overridden`
 - gate-2 → `bash "${CLAUDE_PLUGIN_ROOT}/scripts/update-gate.sh" gate-2 passed gate-3 gate-2-overridden`
 - gate-3 → `bash "${CLAUDE_PLUGIN_ROOT}/scripts/update-gate.sh" gate-3 passed "" gate-3-overridden`
 

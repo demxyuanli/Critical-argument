@@ -39,7 +39,7 @@ For each HIGH-severity failure mode identified in L3, construct a causal chain f
 Sources to analyze (read from codebase/gate-doc, not from user):
 - L1 assumption inventory — each assumption is a potential root-cause node
 - L2 boundary matrix — each boundary is a potential trigger condition
-- Call graph — who calls whom (use grep/codegraph to trace)
+- Call graph — who calls whom (use grep, or codegraph MCP tools if available)
 - Data flow — data passed between components
 - Shared state — components competing for the same resource
 - Error handling chain — exceptions caught/swallowed/transformed where

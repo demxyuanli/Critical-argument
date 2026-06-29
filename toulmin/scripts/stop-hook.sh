@@ -39,11 +39,11 @@ mv "$TEMP_FILE" "$STATE_FILE"
 if [[ "$STATE_GATE_BLOCKED" == "true" ]]; then
   # Consistency check: does gate doc actually say FAILED?
   if ! verify_gate_blocked_consistency; then
-    # State file may be stale — soft warning instead of hard block
+    # State file may be stale — softened block (still blocks, but message is advisory)
     if [[ "$STATE_LANG" == "zh" ]]; then
-      SYSTEM_MSG="⚠️ 状态文件显示 ${STATE_GATE_CURRENT} 未通过，但gate文档缺失或不一致。state file可能过时。建议运行 /toulmin-status 检查。"
+      SYSTEM_MSG="⚠️ 状态文件显示 ${STATE_GATE_CURRENT} 未通过，但gate文档缺失或不一致——state file可能过时。本次仍拦截完成，但请运行 /toulmin-status 检查。如确认无需拦截: /toulmin-override \"理由\"。"
     else
-      SYSTEM_MSG="⚠️ State file says ${STATE_GATE_CURRENT} not passed, but gate document is missing or inconsistent. State file may be stale. Run /toulmin-status to check."
+      SYSTEM_MSG="⚠️ State file says ${STATE_GATE_CURRENT} not passed, but gate document is missing or inconsistent — state file may be stale. Completion is still blocked, but run /toulmin-status to check. If block is incorrect: /toulmin-override \"reason\"."
     fi
     jq -n \
       --arg msg "$SYSTEM_MSG" \

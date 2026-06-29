@@ -51,7 +51,6 @@ if [[ "$VERDICT" == "passed" ]]; then
 
 elif [[ "$VERDICT" == "failed" ]]; then
   # Increment gate attempt counter
-  local cur_attempts
   cur_attempts=$(grep '^gate_attempts:' "$STATE_FILE" | sed 's/gate_attempts: *//' || echo 0)
   cur_attempts=$((cur_attempts + 1))
   sed -i.bak \
