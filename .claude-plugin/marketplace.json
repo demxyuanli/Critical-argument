@@ -1,0 +1,21 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "toulmin-marketplace",
+  "version": "1.0.1",
+  "description": "Toulmin critical argumentation framework for Claude Code — structured 3-gate verification, adversarial debate, and vibe-coding drift detection",
+  "owner": {
+    "name": "demxyuanli",
+    "url": "https://github.com/demxyuanli"
+  },
+  "plugins": [
+    {
+      "name": "toulmin",
+      "description": "Toulmin critical argumentation framework — plan→task→target→Gate1→verify→Gate2→code→debate→Gate3→regression. L0-L2 drift detection, limited verification (L1-L4), adversarial debate (R1-R3), vibe coding safety net with checkpoint protocol.",
+      "version": "1.0.1",
+      "source": "https://github.com/demxyuanli/Critical-argument/releases/download/v1.0.1/toulmin-1.0.1.zip",
+      "category": "development",
+      "homepage": "https://github.com/demxyuanli/Critical-argument",
+      "license": "MIT"
+    }
+  ]
+}
