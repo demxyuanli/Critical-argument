@@ -139,7 +139,7 @@ Vibe mode's 4 implicit assumptions and their rupture signals:
 cp -r toulmin ~/.claude/skills/toulmin
 
 # Via zip
-claude plugin install ./toulmin-1.0.0.zip --scope user
+claude plugin install ./toulmin-1.0.1.zip --scope user
 
 # Development mode
 claude --plugin-dir ./toulmin

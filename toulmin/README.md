@@ -139,7 +139,7 @@ Vibe模式的4个隐含假设及其破裂时的L0信号：
 cp -r toulmin ~/.claude/skills/toulmin
 
 # 通过zip安装
-claude plugin install ./toulmin-1.0.0.zip --scope user
+claude plugin install ./toulmin-1.0.1.zip --scope user
 
 # 开发模式
 claude --plugin-dir ./toulmin

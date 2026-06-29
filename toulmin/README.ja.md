@@ -139,7 +139,7 @@ Vibeモードの4つの暗黙的前提とその破綻シグナル：
 cp -r toulmin ~/.claude/skills/toulmin
 
 # zip経由
-claude plugin install ./toulmin-1.0.0.zip --scope user
+claude plugin install ./toulmin-1.0.1.zip --scope user
 
 # 開発モード
 claude --plugin-dir ./toulmin
