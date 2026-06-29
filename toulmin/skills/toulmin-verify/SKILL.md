@@ -28,6 +28,15 @@ Enumerate boundary values for input dimensions, state dimensions, and environmen
 ### L3: Failure Mode Walkthrough
 For each key module: three most likely failure modes, blast radius, single-point-of-failure check. Mitigation or acceptance for each.
 
+### L3.5: Causal Trace
+For each HIGH-severity failure mode from L3, construct a causal chain. **Do NOT ask the user.** Derive everything from already-available sources: L1 assumptions (root cause nodes), L2 boundaries (trigger conditions), and code structure analysis (call graph, data flow, shared state, error handling chain via grep/codegraph).
+
+Format per trace:
+```
+TOP EVENT → CAUSAL CHAIN (AND/OR edges) → PROPAGATION PATH → CRITICAL JUNCTION (blocked?)
+```
+Each edge labeled with AND (all must fire) or OR (any trigger). Each node labeled with evidence source (L1/L2/code:line).
+
 ### L4: "One Thing That Kills This Design"
 Identify the single fatal assumption. State confidence level (high/medium/low) with rationale.
 
@@ -49,7 +58,7 @@ Write `{gate_dir}/gate-2-verification.md` with the following Toulmin structure:
 **Rebuttal**: [Challenged assumptions and responses]
 **Qualifier**: [Scope of validity]
 
-[Repeat for L2, L3, L4]
+[Repeat for L2, L3, L3.5, L4]
 
 ## Actions Required
 [If FAILED: what must change before retry]

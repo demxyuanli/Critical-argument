@@ -98,6 +98,7 @@ plan → task → target ─┬─ [Gate 1: Convergence] ──→ pseudocode �
 **L1 Assumption Inventory**: List every design assumption, risk-tier, mitigate or explicitly accept.  
 **L2 Boundary Matrix**: Input/state/environment dimensions × handling strategy (or explicit "not handled").  
 **L3 Failure Walkthrough**: 3 most-likely failures per key module + blast radius + single-point-of-failure check.  
+**L3.5 Causal Trace**: For high-severity failures, derive causal chains from L1 assumptions + L2 boundaries + code structure (AND/OR edges). No user questions.  
 **L4 "One Thing That Kills This Design"**: Identify the fatal assumption. Confidence rating (high/medium/low).
 
 ### Gate 3 — Adversarial Debate (R1-R3)

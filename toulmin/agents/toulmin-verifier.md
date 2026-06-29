@@ -33,7 +33,48 @@ For each key module, answer:
 - Is there any single failure that brings down the entire system?
 - Mitigation or explicit acceptance for each
 
+### L3.5 — Causal Trace
+For each HIGH-severity failure mode identified in L3, construct a causal chain from root cause to top event. **Do NOT ask the user for causes. Derive everything from already-available sources.**
+
+Sources to analyze (read from codebase/gate-doc, not from user):
+- L1 assumption inventory — each assumption is a potential root-cause node
+- L2 boundary matrix — each boundary is a potential trigger condition
+- Call graph — who calls whom (use grep/codegraph to trace)
+- Data flow — data passed between components
+- Shared state — components competing for the same resource
+- Error handling chain — exceptions caught/swallowed/transformed where
+
+For each causal chain, output:
+
+```
+### Causal Trace for: [FAILURE MODE NAME]
+
+TOP EVENT: [failure phenomenon]
+
+CAUSAL CHAIN:
+  [root cause] ──(AND/OR: [condition])──→ [intermediate node]
+    ──([condition])──→ [intermediate node]
+    ──([condition])──→ [direct cause]
+    ──([condition])──→ [TOP EVENT]
+
+PROPAGATION PATH:
+  [failure] → [component A] → [component B] → [system-level impact]
+
+CRITICAL JUNCTION:
+  [which single node, if triggered, starts the entire chain?]
+  [is this node already blocked by current design? yes/no/partial]
+
+EVIDENCE SOURCES (all from existing artifacts):
+  - L1: [relevant assumptions used]
+  - L2: [relevant boundary conditions used]
+  - Code: [specific file:line references for call/data/state evidence]
+```
+
+Edge labels: AND means all branches must fire simultaneously. OR means any branch triggers the next node. This is critical for understanding whether a failure needs perfect-storm conditions (AND) or a single trigger (OR).
+
 ### L4 — "One Thing That Kills This Design" Test
+
+**Pass condition**: All HIGH-severity failure modes have causal traces. Each critical junction is classified as blocked/unblocked/partially-blocked. At least one unblocked critical junction per trace must have a mitigation recommendation.
 Answer one question: "If one single fact were discovered to be false, the entire design would need to be rebuilt. What is that fact?"
 Then: "How confident are we that this fact is true?"
 Confidence must be: high / medium / low, with rationale.
