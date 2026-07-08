@@ -36,6 +36,40 @@ PARTS+=("${LABELS[4]}: ${STATE_ITERATION}")
 [[ -n "${STATE_GATE_DIR:-}" ]] && PARTS+=("${LABELS[5]}: ${STATE_GATE_DIR}")
 PARTS+=("/toulmin-status ${LABELS[6]}")
 
+# --- Historical awareness: scan past gate docs ---
+PAST_CONTEXT=""
+PAST_DIR="docs/toulmin"
+if [[ -d "$PAST_DIR" && -n "${STATE_GATE_DIR:-}" ]]; then
+  # Count past task dirs (excluding current)
+  PAST_COUNT=$(find "$PAST_DIR" -maxdepth 1 -type d -mindepth 1 2>/dev/null | while read d; do
+    [[ "$d" != "${STATE_GATE_DIR%/}" ]] && echo "$d"
+  done | wc -l)
+
+  if [[ "$PAST_COUNT" -gt 0 ]]; then
+    # Get current task slug for matching
+    CURRENT_TASK=$(basename "${STATE_GATE_DIR%/}" | sed 's/^[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}-//')
+
+    # Quick scan for similar past tasks (>3 char overlap in task slug)
+    SIMILAR=""
+    if [[ -n "$CURRENT_TASK" ]]; then
+      SIMILAR=$(find "$PAST_DIR" -maxdepth 1 -type d -mindepth 1 -name "*${CURRENT_TASK:0:3}*" 2>/dev/null | while read d; do
+        [[ "$d" != "${STATE_GATE_DIR%/}" ]] && echo "$(basename "$d")"
+      done | tr '\n' ' ')
+    fi
+
+    if [[ "$STATE_LANG" == "zh" ]]; then
+      PAST_CONTEXT="历史任务: ${PAST_COUNT}个 (ls docs/toulmin/)。"
+      [[ -n "$SIMILAR" ]] && PAST_CONTEXT="${PAST_CONTEXT} ⚠️ 疑似相关: ${SIMILAR}— 需检查教训是否复用。"
+    else
+      PAST_CONTEXT="Past tasks: ${PAST_COUNT} (ls docs/toulmin/)."
+      [[ -n "$SIMILAR" ]] && PAST_CONTEXT="${PAST_CONTEXT} ⚠️ Possible related: ${SIMILAR} — check if past lessons apply."
+    fi
+  fi
+fi
+
+PARTS+=("Override: ${STATE_OVERRIDE_COUNT:-0}")
+[[ -n "$PAST_CONTEXT" ]] && PARTS+=("$PAST_CONTEXT")
+
 CONTEXT=$(IFS=' | '; echo "${PARTS[*]}")
 
 jq -n \

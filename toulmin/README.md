@@ -158,6 +158,7 @@ claude --plugin-dir ./toulmin
 | `/toulmin:toulmin-status` | 查看框架状态（只读） | 手动 / checkpoint |
 | `/toulmin:toulmin-override "理由"` | 手动驳回失败gate（记录风险接受） | 手动 |
 | `/toulmin:toulmin-audit "主张"` | 外部证据校核——搜索反例/替代方案/边界外失效 | 手动（gate文档候选表） |
+| `/toulmin:toulmin-premortem` | 失败回溯推演——假定已失败，逆向重建3条因果链 | 手动（Gate 2/3通过后） |
 
 **使用示例**:
 ```bash
@@ -171,12 +172,13 @@ claude --plugin-dir ./toulmin
 
 ```
 toulmin/
-├── skills/                       # 6个技能
+├── skills/                       # 7个技能
 │   ├── toulmin-plan/SKILL.md     #   结构化入口：p→t→t→gate控制流
 │   ├── toulmin-vibe/SKILL.md     #   Vibe入口：checkpoint/VAC/模式转换
 │   ├── toulmin-verify/SKILL.md   #   Gate 2: L1-L4 + gate文档写入
 │   ├── toulmin-debate/SKILL.md   #   Gate 3: R1-R3 + gate文档写入
 │   ├── toulmin-audit/SKILL.md   #   外部证据校核（WebSearch反证搜索）
+│   ├── toulmin-premortem/SKILL.md #   失败回溯推演（假定失败→逆向因果链）
 │   └── toulmin-status/SKILL.md   #   只读状态摘要
 ├── hooks/
 │   └── hooks.json                # 3个hook注册
@@ -198,7 +200,7 @@ toulmin/
 
 ### 实现模式
 
-**grill-me模式**（纯prompt驱动）: 6个技能 + 2个agent。对话引导通过语言约束实现，不需要hook。
+**grill-me模式**（纯prompt驱动）: 7个技能 + 2个agent。对话引导通过语言约束实现，不需要hook。
 
 **ralph-loop模式**（hook + state file）: 3个hook脚本 + `.claude/toulmin-state.local.md`。硬性拦截需要生命周期拦截；状态需要跨轮次持久化。
 
@@ -227,6 +229,8 @@ ca_mode: structured     # structured | vibe
 lang: zh                # 对话语言
 checkpoint_interval: 20 # vibe checkpoint间隔（0=禁用）
 gate_attempts: 0        # 当前gate连续尝试次数（仅提示）
+override_count: 0       # 本次会话override总次数（冷却期追踪）
+override_history: []    # override记录 [gate@round, ...]
 ---
 ```
 

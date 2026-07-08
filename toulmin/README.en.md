@@ -158,6 +158,7 @@ claude --plugin-dir ./toulmin
 | `/toulmin:toulmin-status` | View framework status (read-only) | Manual / checkpoint |
 | `/toulmin:toulmin-override "reason"` | Manually override failed gate (records risk acceptance) | Manual |
 | `/toulmin:toulmin-audit "claim"` | External evidence verification — search counter-examples, alternatives, boundary failures | Manual (gate doc candidate table) |
+| `/toulmin:toulmin-premortem` | Prospective hindsight — assume failure, reverse-engineer 3 causal death paths | Manual (after Gate 2/3 pass) |
 
 ---
 
@@ -165,12 +166,13 @@ claude --plugin-dir ./toulmin
 
 ```
 toulmin/
-├── skills/                       # 6 skills
+├── skills/                       # 7 skills
 │   ├── toulmin-plan/SKILL.md     #   Structured entry: p→t→t→gate control flow
 │   ├── toulmin-vibe/SKILL.md     #   Vibe entry: checkpoint/VAC/mode transition
 │   ├── toulmin-verify/SKILL.md   #   Gate 2: L1-L4 + gate doc writer
 │   ├── toulmin-debate/SKILL.md   #   Gate 3: R1-R3 + gate doc writer
 │   ├── toulmin-audit/SKILL.md   #   External evidence verification (WebSearch counter-evidence)
+│   ├── toulmin-premortem/SKILL.md #   Prospective hindsight (assume failure → reverse causal chains)
 │   └── toulmin-status/SKILL.md   #   Read-only status summary
 ├── hooks/
 │   └── hooks.json                # 3 hook registrations
@@ -193,7 +195,7 @@ toulmin/
 
 ### Implementation Patterns
 
-**grill-me pattern** (pure prompt-driven): 6 skills + 2 agents. Behavioral guidance through language constraints — no hooks needed.
+**grill-me pattern** (pure prompt-driven): 7 skills + 2 agents. Behavioral guidance through language constraints — no hooks needed.
 
 **ralph-loop pattern** (hook + state file): 3 hook scripts + `.claude/toulmin-state.local.md`. Hard enforcement requires lifecycle interception; state requires cross-turn persistence.
 
@@ -222,6 +224,8 @@ ca_mode: structured     # structured | vibe
 lang: zh                # Output language
 checkpoint_interval: 20 # Vibe checkpoint interval (0=disabled)
 gate_attempts: 0        # Gate retry counter (display only, no automatic behavior)
+override_count: 0       # Total overrides this session (cooldown tracking)
+override_history: []    # Override log [gate@round, ...]
 ---
 ```
 

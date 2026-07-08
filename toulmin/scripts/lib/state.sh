@@ -28,6 +28,8 @@ read_toulmin_state() {
   STATE_GATE_DIR=$(state_field "gate_dir")
   STATE_CHECKPOINT_INTERVAL=$(state_field "checkpoint_interval")
   STATE_GATE_ATTEMPTS=$(state_field "gate_attempts")
+  STATE_OVERRIDE_COUNT=$(state_field "override_count")
+  STATE_OVERRIDE_HISTORY=$(state_field "override_history")
 
   # Apply defaults for unset fields
   : "${STATE_GATE_BLOCKED:=false}"
@@ -40,6 +42,8 @@ read_toulmin_state() {
   : "${STATE_GATE_CURRENT:=none}"
   : "${STATE_GATE_DIR:=}"
   : "${STATE_GATE_ATTEMPTS:=0}"
+  : "${STATE_OVERRIDE_COUNT:=0}"
+  : "${STATE_OVERRIDE_HISTORY:=[]}"
 
   return 0
 }
