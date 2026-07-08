@@ -185,6 +185,7 @@ toulmin/
 │   │   └── state.sh              #   共享state解析 + session隔离 + 默认值
 │   ├── update-gate.sh            #   统一gate状态更新（原子sed）
 │   ├── pre-tool-use.sh           #   gate_blocked=true → deny Write/Edit
+│   ├── bash-guard.sh             #   gate_blocked=true → deny Bash文件写入绕过
 │   ├── stop-hook.sh              #   轮次计数 + 完成拦截 + checkpoint注入
 │   └── session-start.sh          #   恢复指针 addContext
 ├── agents/
@@ -200,6 +201,13 @@ toulmin/
 **grill-me模式**（纯prompt驱动）: 6个技能 + 2个agent。对话引导通过语言约束实现，不需要hook。
 
 **ralph-loop模式**（hook + state file）: 3个hook脚本 + `.claude/toulmin-state.local.md`。硬性拦截需要生命周期拦截；状态需要跨轮次持久化。
+
+**Hook强制力的已知限制**（详见 `toulmin-audit` 审查）:
+- ✅ 交互模式 + exit code 2 → 确定性阻断
+- ❌ headless `-p` 模式 → hooks不被调用
+- ❌ `--dangerously-skip-permissions` → hooks异步，阻断延迟
+- ❌ subagent工具调用 → PreToolUse不触发
+- ⚠️ Bash写入绕过 → 已通过 `bash-guard.sh` 覆盖（sed/echo>/tee等）
 
 **共享基础设施**:
 - `scripts/lib/state.sh` — 统一frontmatter解析、session隔离、字段默认值。3个hook通过 `source` 复用。

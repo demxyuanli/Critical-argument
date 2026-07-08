@@ -179,6 +179,7 @@ toulmin/
 │   │   └── state.sh              #   共有state解析 + セッション分離 + デフォルト値
 │   ├── update-gate.sh            #   統合gate状態更新（アトミックsed）
 │   ├── pre-tool-use.sh           #   gate_blocked=true → Write/Edit拒否
+│   ├── bash-guard.sh             #   gate_blocked=true → Bashファイル書込迂回拒否
 │   ├── stop-hook.sh              #   反復カウンタ + 完了ブロック + チェックポイント注入
 │   └── session-start.sh          #   復元ポインタ addContext
 ├── agents/
@@ -196,6 +197,13 @@ toulmin/
 **grill-meパターン**（純粋プロンプト駆動）: 6スキル + 2エージェント。言語制約による行動誘導——フック不要。
 
 **ralph-loopパターン**（フック + stateファイル）: 3フックスクリプト + `.claude/toulmin-state.local.md`。ハード強制にはライフサイクルインターセプトが必要；状態にはクロスターン永続化が必要。
+
+**フック強制力の既知の制限**（`toulmin-audit` レビュー参照）:
+- ✅ 対話モード + exit code 2 → 決定的ブロック
+- ❌ headless `-p` モード → フック呼出なし
+- ❌ `--dangerously-skip-permissions` → 非同期、拒否が遅延
+- ❌ サブエージェントツール呼出 → PreToolUse未発火
+- ⚠️ Bash書込迂回 → `bash-guard.sh` でカバー（sed/echo>/tee等）
 
 **共有インフラストラクチャ**:
 - `scripts/lib/state.sh` — 統一frontmatter解析、セッション分離、フィールドデフォルト値。全3フックが `source` で再利用。

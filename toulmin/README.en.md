@@ -179,6 +179,7 @@ toulmin/
 │   │   └── state.sh              #   Shared state parser + session isolation + defaults
 │   ├── update-gate.sh            #   Unified gate state updater (atomic sed)
 │   ├── pre-tool-use.sh           #   gate_blocked=true → deny Write/Edit
+│   ├── bash-guard.sh             #   gate_blocked=true → deny Bash file-write bypass
 │   ├── stop-hook.sh              #   Iteration counter + completion blocker + checkpoint injector
 │   └── session-start.sh          #   Recovery pointer addContext
 ├── agents/
@@ -195,6 +196,13 @@ toulmin/
 **grill-me pattern** (pure prompt-driven): 6 skills + 2 agents. Behavioral guidance through language constraints — no hooks needed.
 
 **ralph-loop pattern** (hook + state file): 3 hook scripts + `.claude/toulmin-state.local.md`. Hard enforcement requires lifecycle interception; state requires cross-turn persistence.
+
+**Known hook enforcement limits** (see `toulmin-audit` review):
+- ✅ Interactive mode + exit code 2 → deterministic blocking
+- ❌ headless `-p` mode → hooks not invoked
+- ❌ `--dangerously-skip-permissions` → hooks async, denial delayed
+- ❌ subagent tool calls → PreToolUse not triggered
+- ⚠️ Bash write bypass → covered via `bash-guard.sh` (sed/echo>/tee, etc.)
 
 **Shared infrastructure**:
 - `scripts/lib/state.sh` — Unified frontmatter parsing, session isolation, field defaults. Sourced by all 3 hooks.
