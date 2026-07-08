@@ -157,6 +157,9 @@ claude --plugin-dir ./toulmin
 | `/toulmin:toulmin-debate` | R1-R3反方辩论（Gate 3） | plan委托 / vibe独立 |
 | `/toulmin:toulmin-status` | 查看框架状态（只读） | 手动 / checkpoint |
 | `/toulmin:toulmin-override "理由"` | 手动驳回失败gate（记录风险接受） | 手动 |
+| `/toulmin:toulmin-audit "主张"` | 外部证据校核——搜索反例/替代方案/边界外失效 | 手动（gate文档候选表） |
+| `/toulmin:toulmin-premortem` | 失败回溯推演——假定已失败，逆向重建3条因果链 | 手动（Gate 2/3通过后） |
+| `/toulmin:toulmin-qualify` | 统一限定词合成——汇总所有工具发现，生成精确作用域声明 | 手动（所有审查工具完成后） |
 
 **使用示例**:
 ```bash
@@ -170,11 +173,14 @@ claude --plugin-dir ./toulmin
 
 ```
 toulmin/
-├── skills/                       # 5个技能
+├── skills/                       # 8个技能
 │   ├── toulmin-plan/SKILL.md     #   结构化入口：p→t→t→gate控制流
 │   ├── toulmin-vibe/SKILL.md     #   Vibe入口：checkpoint/VAC/模式转换
 │   ├── toulmin-verify/SKILL.md   #   Gate 2: L1-L4 + gate文档写入
 │   ├── toulmin-debate/SKILL.md   #   Gate 3: R1-R3 + gate文档写入
+│   ├── toulmin-audit/SKILL.md   #   外部证据校核（WebSearch反证搜索）
+│   ├── toulmin-premortem/SKILL.md #   失败回溯推演（假定失败→逆向因果链）
+│   ├── toulmin-qualify/SKILL.md  #   统一限定词合成（汇总→精确作用域声明）
 │   └── toulmin-status/SKILL.md   #   只读状态摘要
 ├── hooks/
 │   └── hooks.json                # 3个hook注册
@@ -183,6 +189,7 @@ toulmin/
 │   │   └── state.sh              #   共享state解析 + session隔离 + 默认值
 │   ├── update-gate.sh            #   统一gate状态更新（原子sed）
 │   ├── pre-tool-use.sh           #   gate_blocked=true → deny Write/Edit
+│   ├── bash-guard.sh             #   gate_blocked=true → deny Bash文件写入绕过
 │   ├── stop-hook.sh              #   轮次计数 + 完成拦截 + checkpoint注入
 │   └── session-start.sh          #   恢复指针 addContext
 ├── agents/
@@ -195,9 +202,16 @@ toulmin/
 
 ### 实现模式
 
-**grill-me模式**（纯prompt驱动）: 5个技能 + 2个agent。对话引导通过语言约束实现，不需要hook。
+**grill-me模式**（纯prompt驱动）: 8个技能 + 2个agent。对话引导通过语言约束实现，不需要hook。
 
 **ralph-loop模式**（hook + state file）: 3个hook脚本 + `.claude/toulmin-state.local.md`。硬性拦截需要生命周期拦截；状态需要跨轮次持久化。
+
+**Hook强制力的已知限制**（详见 `toulmin-audit` 审查）:
+- ✅ 交互模式 + exit code 2 → 确定性阻断
+- ❌ headless `-p` 模式 → hooks不被调用
+- ❌ `--dangerously-skip-permissions` → hooks异步，阻断延迟
+- ❌ subagent工具调用 → PreToolUse不触发
+- ⚠️ Bash写入绕过 → 已通过 `bash-guard.sh` 覆盖（sed/echo>/tee等）
 
 **共享基础设施**:
 - `scripts/lib/state.sh` — 统一frontmatter解析、session隔离、字段默认值。3个hook通过 `source` 复用。
@@ -217,6 +231,8 @@ ca_mode: structured     # structured | vibe
 lang: zh                # 对话语言
 checkpoint_interval: 20 # vibe checkpoint间隔（0=禁用）
 gate_attempts: 0        # 当前gate连续尝试次数（仅提示）
+override_count: 0       # 本次会话override总次数（冷却期追踪）
+override_history: []    # override记录 [gate@round, ...]
 ---
 ```
 

@@ -78,5 +78,23 @@ Write `{gate_dir}/gate-2-verification.md` with the following Toulmin structure:
      ```
 2. Report verdict to user.
 3. If FAILED: halt. Do not proceed. Return control to user.
+4. Scan the gate-2 document for claims that reference external facts (library versions, tool capabilities, performance benchmarks, industry standards). Extract them into a fact-check candidate table appended to the gate document:
+
+```markdown
+## Fact-Check Candidates
+
+Claims below reference external facts verifiable via web search. Mark `[x]` to audit with `/toulmin:toulmin-audit`.
+
+| # | Claim | Ground (cited basis) | Audit focus | Risk | Est. tokens |
+|---|-------|---------------------|-------------|------|-------------|
+| 1 | "[exact claim from L1-L4]" | [what it's based on] | [what to search for] | H/M/L | ~3k |
+```
+
+Risk assessment:
+- **H**: Claim underpins a design decision with no fallback. If wrong, design must change.
+- **M**: Claim influences a non-critical decision. Wrong → scope adjustment, not redesign.
+- **L**: Claim is supplementary. Wrong → minor correction.
+
+If no externally-verifiable claims found: "No fact-check candidates — all claims are design judgments or logic-based."
 
 Output in the language specified by `lang` field.

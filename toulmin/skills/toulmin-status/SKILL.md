@@ -33,6 +33,25 @@ Read the current framework state and present it to the user.
 - [Any gate_blocked=true → "Coding tools BLOCKED — gate not passed"]
 - [Any failed gate → "Gate N failed — see gate doc for details"]
 - [Vibe mode checkpoint status]
+- [override_count > 0 → "⚠️  [N] gate(s) overridden this session. Override ratio: [N]:[M passed naturally]"]
+- [override_count ≥ 3 → "🛑 Gate discipline degraded — more overrides than completions. Framework becoming ceremonial."]
+
+### Hook integrity
+Known hook enforcement blind spots (verified by toulmin-audit — see README):
+- ✅ Interactive mode + exit code 2 → deterministic blocking
+- ❌ headless `-p` mode → hooks not invoked at all
+- ❌ `--dangerously-skip-permissions` → hooks run async, denial delayed
+- ❌ subagent tool calls → PreToolUse not triggered for subagent Bash/Write
+- ⚠️  Bash write bypass → covered by bash-guard.sh (sed/echo>/tee patterns)
+- To verify hooks are active: check that iteration counter is incrementing (run status twice — if iteration is the same, Stop hook may be silent)
+
+### Historical context
+[If docs/toulmin/ contains directories beyond current gate_dir]:
+```
+Past tasks in this project: [N] session(s)
+  [List of directories with dates and one-line gate-1 summaries]
+Run: ls docs/toulmin/ to review. Consider: does the current task overlap with any past task?
+```
 
 ### Next action
 [If gate_blocked: what to do to unblock]

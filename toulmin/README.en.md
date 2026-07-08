@@ -157,6 +157,9 @@ claude --plugin-dir ./toulmin
 | `/toulmin:toulmin-debate` | R1-R3 debate (Gate 3) | Plan delegate / vibe standalone |
 | `/toulmin:toulmin-status` | View framework status (read-only) | Manual / checkpoint |
 | `/toulmin:toulmin-override "reason"` | Manually override failed gate (records risk acceptance) | Manual |
+| `/toulmin:toulmin-audit "claim"` | External evidence verification — search counter-examples, alternatives, boundary failures | Manual (gate doc candidate table) |
+| `/toulmin:toulmin-premortem` | Prospective hindsight — assume failure, reverse-engineer 3 causal death paths | Manual (after Gate 2/3 pass) |
+| `/toulmin:toulmin-qualify` | Unified qualifier synthesis — aggregate all tool findings into a precise scope statement | Manual (after all review tools) |
 
 ---
 
@@ -164,11 +167,14 @@ claude --plugin-dir ./toulmin
 
 ```
 toulmin/
-├── skills/                       # 5 skills
+├── skills/                       # 8 skills
 │   ├── toulmin-plan/SKILL.md     #   Structured entry: p→t→t→gate control flow
 │   ├── toulmin-vibe/SKILL.md     #   Vibe entry: checkpoint/VAC/mode transition
 │   ├── toulmin-verify/SKILL.md   #   Gate 2: L1-L4 + gate doc writer
 │   ├── toulmin-debate/SKILL.md   #   Gate 3: R1-R3 + gate doc writer
+│   ├── toulmin-audit/SKILL.md   #   External evidence verification (WebSearch counter-evidence)
+│   ├── toulmin-premortem/SKILL.md #   Prospective hindsight (assume failure → reverse causal chains)
+│   ├── toulmin-qualify/SKILL.md  #   Unified qualifier synthesis (aggregate → precise scope)
 │   └── toulmin-status/SKILL.md   #   Read-only status summary
 ├── hooks/
 │   └── hooks.json                # 3 hook registrations
@@ -177,6 +183,7 @@ toulmin/
 │   │   └── state.sh              #   Shared state parser + session isolation + defaults
 │   ├── update-gate.sh            #   Unified gate state updater (atomic sed)
 │   ├── pre-tool-use.sh           #   gate_blocked=true → deny Write/Edit
+│   ├── bash-guard.sh             #   gate_blocked=true → deny Bash file-write bypass
 │   ├── stop-hook.sh              #   Iteration counter + completion blocker + checkpoint injector
 │   └── session-start.sh          #   Recovery pointer addContext
 ├── agents/
@@ -190,9 +197,16 @@ toulmin/
 
 ### Implementation Patterns
 
-**grill-me pattern** (pure prompt-driven): 5 skills + 2 agents. Behavioral guidance through language constraints — no hooks needed.
+**grill-me pattern** (pure prompt-driven): 8 skills + 2 agents. Behavioral guidance through language constraints — no hooks needed.
 
 **ralph-loop pattern** (hook + state file): 3 hook scripts + `.claude/toulmin-state.local.md`. Hard enforcement requires lifecycle interception; state requires cross-turn persistence.
+
+**Known hook enforcement limits** (see `toulmin-audit` review):
+- ✅ Interactive mode + exit code 2 → deterministic blocking
+- ❌ headless `-p` mode → hooks not invoked
+- ❌ `--dangerously-skip-permissions` → hooks async, denial delayed
+- ❌ subagent tool calls → PreToolUse not triggered
+- ⚠️ Bash write bypass → covered via `bash-guard.sh` (sed/echo>/tee, etc.)
 
 **Shared infrastructure**:
 - `scripts/lib/state.sh` — Unified frontmatter parsing, session isolation, field defaults. Sourced by all 3 hooks.
@@ -212,6 +226,8 @@ ca_mode: structured     # structured | vibe
 lang: zh                # Output language
 checkpoint_interval: 20 # Vibe checkpoint interval (0=disabled)
 gate_attempts: 0        # Gate retry counter (display only, no automatic behavior)
+override_count: 0       # Total overrides this session (cooldown tracking)
+override_history: []    # Override log [gate@round, ...]
 ---
 ```
 
