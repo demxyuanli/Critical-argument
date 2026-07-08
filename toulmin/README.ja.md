@@ -157,6 +157,7 @@ claude --plugin-dir ./toulmin
 | `/toulmin:toulmin-debate` | R1-R3討論（Gate 3） | Plan委譲 / vibe単独 |
 | `/toulmin:toulmin-status` | フレームワーク状態表示（読取専用） | 手動 / チェックポイント |
 | `/toulmin:toulmin-override "理由"` | 失敗gateの手動却下（リスク受諾を記録） | 手動 |
+| `/toulmin:toulmin-audit "主張"` | 外部証拠検証 — 反例・代替案・境界外障害をWeb検索 | 手動（gate文書候補表から） |
 
 ---
 
@@ -164,11 +165,12 @@ claude --plugin-dir ./toulmin
 
 ```
 toulmin/
-├── skills/                       # 5スキル
+├── skills/                       # 6スキル
 │   ├── toulmin-plan/SKILL.md     #   構造化エントリ: p→t→t→gate制御フロー
 │   ├── toulmin-vibe/SKILL.md     #   Vibeエントリ: チェックポイント/VAC/モード遷移
 │   ├── toulmin-verify/SKILL.md   #   Gate 2: L1-L4 + gate文書書込
 │   ├── toulmin-debate/SKILL.md   #   Gate 3: R1-R3 + gate文書書込
+│   ├── toulmin-audit/SKILL.md   #   外部証拠検証（WebSearch反証検索）
 │   └── toulmin-status/SKILL.md   #   読取専用状態サマリ
 ├── hooks/
 │   └── hooks.json                # 3フック登録
@@ -191,7 +193,7 @@ toulmin/
 
 ### 実装パターン
 
-**grill-meパターン**（純粋プロンプト駆動）: 5スキル + 2エージェント。言語制約による行動誘導——フック不要。
+**grill-meパターン**（純粋プロンプト駆動）: 6スキル + 2エージェント。言語制約による行動誘導——フック不要。
 
 **ralph-loopパターン**（フック + stateファイル）: 3フックスクリプト + `.claude/toulmin-state.local.md`。ハード強制にはライフサイクルインターセプトが必要；状態にはクロスターン永続化が必要。
 

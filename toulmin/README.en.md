@@ -157,6 +157,7 @@ claude --plugin-dir ./toulmin
 | `/toulmin:toulmin-debate` | R1-R3 debate (Gate 3) | Plan delegate / vibe standalone |
 | `/toulmin:toulmin-status` | View framework status (read-only) | Manual / checkpoint |
 | `/toulmin:toulmin-override "reason"` | Manually override failed gate (records risk acceptance) | Manual |
+| `/toulmin:toulmin-audit "claim"` | External evidence verification — search counter-examples, alternatives, boundary failures | Manual (gate doc candidate table) |
 
 ---
 
@@ -164,11 +165,12 @@ claude --plugin-dir ./toulmin
 
 ```
 toulmin/
-├── skills/                       # 5 skills
+├── skills/                       # 6 skills
 │   ├── toulmin-plan/SKILL.md     #   Structured entry: p→t→t→gate control flow
 │   ├── toulmin-vibe/SKILL.md     #   Vibe entry: checkpoint/VAC/mode transition
 │   ├── toulmin-verify/SKILL.md   #   Gate 2: L1-L4 + gate doc writer
 │   ├── toulmin-debate/SKILL.md   #   Gate 3: R1-R3 + gate doc writer
+│   ├── toulmin-audit/SKILL.md   #   External evidence verification (WebSearch counter-evidence)
 │   └── toulmin-status/SKILL.md   #   Read-only status summary
 ├── hooks/
 │   └── hooks.json                # 3 hook registrations
@@ -190,7 +192,7 @@ toulmin/
 
 ### Implementation Patterns
 
-**grill-me pattern** (pure prompt-driven): 5 skills + 2 agents. Behavioral guidance through language constraints — no hooks needed.
+**grill-me pattern** (pure prompt-driven): 6 skills + 2 agents. Behavioral guidance through language constraints — no hooks needed.
 
 **ralph-loop pattern** (hook + state file): 3 hook scripts + `.claude/toulmin-state.local.md`. Hard enforcement requires lifecycle interception; state requires cross-turn persistence.
 

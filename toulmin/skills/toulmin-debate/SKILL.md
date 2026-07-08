@@ -93,5 +93,23 @@ Write `{gate_dir}/gate-3-debate.md`:
      bash "${CLAUDE_PLUGIN_ROOT}/scripts/update-gate.sh" gate-3 failed
      ```
 2. Report verdict.
+3. Scan the gate-3 debate document for REBUT and CLARIFY items that invoke external references (RFC standards, library docs, version claims, ecosystem comparisons, security CVEs). Extract them into a fact-check candidate table appended to the gate document:
+
+```markdown
+## Fact-Check Candidates
+
+Claims below reference external facts verifiable via web search. Mark `[x]` to audit with `/toulmin:toulmin-audit`.
+
+| # | Claim (from debate) | Ground (cited in R2) | Audit focus | Risk | Est. tokens |
+|---|--------------------|--------------------|-------------|------|-------------|
+| 1 | "[disputed claim from R1→R2]" | [evidence cited in rebuttal] | [what to search for] | H/M/L | ~3k |
+```
+
+Risk assessment:
+- **H**: If the external reference is wrong, the rebuttal collapses → finding becomes ACCEPT.
+- **M**: External reference is supporting, not load-bearing. Wrong → verdict confidence reduced.
+- **L**: External reference is tangential to the rebuttal.
+
+If no externally-citable items: "No fact-check candidates — all REBUT/CLARIFY items based on internal logic."
 
 Output in the language specified by `lang` field.
