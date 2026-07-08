@@ -159,6 +159,7 @@ claude --plugin-dir ./toulmin
 | `/toulmin:toulmin-override "reason"` | Manually override failed gate (records risk acceptance) | Manual |
 | `/toulmin:toulmin-audit "claim"` | External evidence verification — search counter-examples, alternatives, boundary failures | Manual (gate doc candidate table) |
 | `/toulmin:toulmin-premortem` | Prospective hindsight — assume failure, reverse-engineer 3 causal death paths | Manual (after Gate 2/3 pass) |
+| `/toulmin:toulmin-qualify` | Unified qualifier synthesis — aggregate all tool findings into a precise scope statement | Manual (after all review tools) |
 
 ---
 
@@ -166,13 +167,14 @@ claude --plugin-dir ./toulmin
 
 ```
 toulmin/
-├── skills/                       # 7 skills
+├── skills/                       # 8 skills
 │   ├── toulmin-plan/SKILL.md     #   Structured entry: p→t→t→gate control flow
 │   ├── toulmin-vibe/SKILL.md     #   Vibe entry: checkpoint/VAC/mode transition
 │   ├── toulmin-verify/SKILL.md   #   Gate 2: L1-L4 + gate doc writer
 │   ├── toulmin-debate/SKILL.md   #   Gate 3: R1-R3 + gate doc writer
 │   ├── toulmin-audit/SKILL.md   #   External evidence verification (WebSearch counter-evidence)
 │   ├── toulmin-premortem/SKILL.md #   Prospective hindsight (assume failure → reverse causal chains)
+│   ├── toulmin-qualify/SKILL.md  #   Unified qualifier synthesis (aggregate → precise scope)
 │   └── toulmin-status/SKILL.md   #   Read-only status summary
 ├── hooks/
 │   └── hooks.json                # 3 hook registrations
@@ -195,7 +197,7 @@ toulmin/
 
 ### Implementation Patterns
 
-**grill-me pattern** (pure prompt-driven): 7 skills + 2 agents. Behavioral guidance through language constraints — no hooks needed.
+**grill-me pattern** (pure prompt-driven): 8 skills + 2 agents. Behavioral guidance through language constraints — no hooks needed.
 
 **ralph-loop pattern** (hook + state file): 3 hook scripts + `.claude/toulmin-state.local.md`. Hard enforcement requires lifecycle interception; state requires cross-turn persistence.
 
