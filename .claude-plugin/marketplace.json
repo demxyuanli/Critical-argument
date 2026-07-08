@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "toulmin",
-      "description": "Toulmin critical argumentation framework — plan→task→target→Gate1→verify→Gate2→code→debate→Gate3→regression. L0-L2 drift detection, limited verification (L1-L4), adversarial debate (R1-R3), vibe coding safety net with checkpoint protocol.",
+      "description": "Toulmin critical argumentation framework — plan→task→target→Gate1→verify→Gate2→code→debate→Gate3→regression. 8 skills: structured & vibe entries, L1-L4 verification (with L3.5 causal trace), R1-R3 adversarial debate (D1-D6 attack dimensions), external evidence audit via WebSearch, pre-mortem failure backtracking, unified qualifier synthesis, manual override with cooldown. L0-L2 drift detection with checkpoint protocol.",
       "version": "1.1.0",
       "source": "https://github.com/demxyuanli/Critical-argument/releases/download/v1.1.0/toulmin-1.1.0.zip",
       "category": "development",
