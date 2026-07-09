@@ -1,5 +1,7 @@
 # Toulmin 技能组合使用指南
 
+[English](skill-combination-guide.en.md)
+
 > 8 个经过验证的技能组合，每个含适用场景、触发条件、使用步骤、成本、产物。
 > 验证记录见 [`skill-combination-verification.md`](skill-combination-verification.md)。
 

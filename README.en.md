@@ -289,6 +289,16 @@ Gate documents are **third-party argumentation records** — independent of plug
 
 ---
 
+## Additional Docs
+
+| Document | Content |
+|----------|---------|
+| [Skill Combination Guide](docs/skill-combination-guide.md) [(EN)](docs/skill-combination-guide.en.md) | 8 verified combinations with scenarios, usage, workflows |
+| [Skill Combination Verification](docs/skill-combination-verification.md) | 8 combinations tested + 3 bugs found |
+| [Theory Framework](ai-failure-detection-framework.md) [(EN)](ai-failure-detection-framework.en.md) | 10 claims + 10 sections |
+
+---
+
 ## License
 
 MIT

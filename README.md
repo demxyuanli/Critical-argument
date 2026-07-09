@@ -293,9 +293,9 @@ Gate文档是**第三方论证记录**——独立于插件和对话上下文。
 
 | 文档 | 内容 |
 |------|------|
-| [技能组合使用指南](docs/skill-combination-guide.md) | 8个组合的适用场景、使用方法、典型工作流 |
+| [技能组合使用指南](docs/skill-combination-guide.md) [(EN)](docs/skill-combination-guide.en.md) | 8个组合的适用场景、使用方法、典型工作流 |
 | [技能组合验证记录](docs/skill-combination-verification.md) | 8个组合的实战验证 + 发现的3个bug |
-| [理论框架](ai-failure-detection-framework.md) | 10论点 + 10章节完整论证 |
+| [理论框架](ai-failure-detection-framework.md) [(EN)](ai-failure-detection-framework.en.md) | 10论点 + 10章节完整论证 |
 
 ---
 

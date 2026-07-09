@@ -1,5 +1,7 @@
 # AI辅助工程的失效模式检测与干预框架
 
+[English](ai-failure-detection-framework.en.md)
+
 > 基于图尔敏论证模型构建，经批判性论证审查，适配vibe coding长程任务。
 
 ---
