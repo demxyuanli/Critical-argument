@@ -160,6 +160,7 @@ claude --plugin-dir ./toulmin
 | `/toulmin:toulmin-audit "主张"` | 外部证据校核——搜索反例/替代方案/边界外失效 | 手动（gate文档候选表） |
 | `/toulmin:toulmin-premortem` | 失败回溯推演——假定已失败，逆向重建3条因果链 | 手动（Gate 2/3通过后） |
 | `/toulmin:toulmin-qualify` | 统一限定词合成——汇总所有工具发现，生成精确作用域声明 | 手动（所有审查工具完成后） |
+| `/toulmin:toulmin-tree` | 行为树可视化——任务+gate+分区+跨会话引用的Mermaid图 | 手动 / 状态查看 |
 
 **使用示例**:
 ```bash
@@ -173,7 +174,7 @@ claude --plugin-dir ./toulmin
 
 ```
 toulmin/
-├── skills/                       # 8个技能
+├── skills/                       # 9个技能
 │   ├── toulmin-plan/SKILL.md     #   结构化入口：p→t→t→gate控制流
 │   ├── toulmin-vibe/SKILL.md     #   Vibe入口：checkpoint/VAC/模式转换
 │   ├── toulmin-verify/SKILL.md   #   Gate 2: L1-L4 + gate文档写入
@@ -181,6 +182,7 @@ toulmin/
 │   ├── toulmin-audit/SKILL.md   #   外部证据校核（WebSearch反证搜索）
 │   ├── toulmin-premortem/SKILL.md #   失败回溯推演（假定失败→逆向因果链）
 │   ├── toulmin-qualify/SKILL.md  #   统一限定词合成（汇总→精确作用域声明）
+│   ├── toulmin-tree/SKILL.md    #   行为树可视化（Mermaid图+分区+跨会话）
 │   └── toulmin-status/SKILL.md   #   只读状态摘要
 ├── hooks/
 │   └── hooks.json                # 3个hook注册
@@ -190,6 +192,7 @@ toulmin/
 │   ├── update-gate.sh            #   统一gate状态更新（原子sed）
 │   ├── pre-tool-use.sh           #   gate_blocked=true → deny Write/Edit
 │   ├── bash-guard.sh             #   gate_blocked=true → deny Bash文件写入绕过
+│   ├── partition-track.sh        #   上下文分区切换记录（漂移检测）
 │   ├── stop-hook.sh              #   轮次计数 + 完成拦截 + checkpoint注入
 │   └── session-start.sh          #   恢复指针 addContext
 ├── agents/
@@ -202,7 +205,7 @@ toulmin/
 
 ### 实现模式
 
-**grill-me模式**（纯prompt驱动）: 8个技能 + 2个agent。对话引导通过语言约束实现，不需要hook。
+**grill-me模式**（纯prompt驱动）: 9个技能 + 2个agent。对话引导通过语言约束实现，不需要hook。
 
 **ralph-loop模式**（hook + state file）: 3个hook脚本 + `.claude/toulmin-state.local.md`。硬性拦截需要生命周期拦截；状态需要跨轮次持久化。
 
@@ -233,6 +236,8 @@ checkpoint_interval: 20 # vibe checkpoint间隔（0=禁用）
 gate_attempts: 0        # 当前gate连续尝试次数（仅提示）
 override_count: 0       # 本次会话override总次数（冷却期追踪）
 override_history: []    # override记录 [gate@round, ...]
+partitions: ["task"]    # 上下文分区追踪 ["task→subtopic@iteration:reason", ...]
+partition_current: task # 当前活跃分区
 ---
 ```
 

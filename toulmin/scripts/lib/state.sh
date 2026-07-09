@@ -30,6 +30,8 @@ read_toulmin_state() {
   STATE_GATE_ATTEMPTS=$(state_field "gate_attempts")
   STATE_OVERRIDE_COUNT=$(state_field "override_count")
   STATE_OVERRIDE_HISTORY=$(state_field "override_history")
+  STATE_PARTITIONS=$(state_field "partitions")
+  STATE_PARTITION_CURRENT=$(state_field "partition_current")
 
   # Apply defaults for unset fields
   : "${STATE_GATE_BLOCKED:=false}"
@@ -44,6 +46,8 @@ read_toulmin_state() {
   : "${STATE_GATE_ATTEMPTS:=0}"
   : "${STATE_OVERRIDE_COUNT:=0}"
   : "${STATE_OVERRIDE_HISTORY:=[]}"
+  : "${STATE_PARTITIONS:=[\"task\"]}"
+  : "${STATE_PARTITION_CURRENT:=task}"
 
   return 0
 }
