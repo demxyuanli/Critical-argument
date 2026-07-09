@@ -32,7 +32,13 @@ fi
 
 # Append to partition history
 NEW_ENTRY="${CURRENT}→${PARTITION}@${ITERATION}:${REASON}"
-sed -i.bak "s/^partitions: \[\(.*\)\]/partitions: [\1\"${NEW_ENTRY}\", ]/" "$STATE_FILE"
+if grep -qE '^partitions: \[.+\]' "$STATE_FILE"; then
+  # Non-empty array → insert comma before new entry
+  sed -i.bak "s/^partitions: \[\(.*\)\]/partitions: [\1, \"${NEW_ENTRY}\"]/" "$STATE_FILE"
+else
+  # Empty array [] → first entry
+  sed -i.bak "s/^partitions: \[\]/partitions: [\"${NEW_ENTRY}\"]/" "$STATE_FILE"
+fi
 
 # Update current partition
 sed -i.bak "s/^partition_current: .*/partition_current: ${PARTITION}/" "$STATE_FILE"

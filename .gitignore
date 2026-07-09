@@ -1,0 +1,9 @@
+# Toulmin local state (per-project, not for version control)
+.claude/toulmin-state.local.md
+
+# Python
+__pycache__/
+*.pyc
+
+# Local test artifacts
+parse_config_demo.py

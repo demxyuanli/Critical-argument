@@ -31,9 +31,11 @@ if [[ "$VERDICT" == "passed" ]]; then
 
   # Idempotent append to gates_passed (anchored to gates_passed line only)
   if ! grep -q "^gates_passed:.*\<${GATE}\>" "$STATE_FILE"; then
-    if grep -q '^gates_passed: \[.\]' "$STATE_FILE"; then
+    if grep -qE '^gates_passed: \[.+\]' "$STATE_FILE"; then
+      # Non-empty array [x, y] → append ", gate"
       SED_EXPRS+=(-e "s/^gates_passed: \[\(.*\)\]/gates_passed: [\1, ${GATE}]/")
     else
+      # Empty array [] → set [gate]
       SED_EXPRS+=(-e "s/^gates_passed: \[\]/gates_passed: [${GATE}]/")
     fi
   fi

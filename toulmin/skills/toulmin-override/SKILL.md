@@ -114,9 +114,14 @@ Then update override counters:
 # Increment override_count
 NEW_COUNT=$((<override_count> + 1))
 sed -i.bak "s/^override_count: .*/override_count: ${NEW_COUNT}/" .claude/toulmin-state.local.md
-# Update override_history
+# Append to override_history (handle empty/non-empty array — same fix as update-gate.sh)
 CURRENT_ITERATION=$(grep '^iteration:' .claude/toulmin-state.local.md | sed 's/iteration: *//')
-sed -i.bak "s/^override_history: \[\(.*\)\]/override_history: [\1${CURRENT_ITERATION},]/" .claude/toulmin-state.local.md
+ENTRY="${GATE}@${CURRENT_ITERATION}"
+if grep -qE '^override_history: \[.+\]' .claude/toulmin-state.local.md; then
+  sed -i.bak "s/^override_history: \[\(.*\)\]/override_history: [\1, ${ENTRY}]/" .claude/toulmin-state.local.md
+else
+  sed -i.bak "s/^override_history: \[\]/override_history: [${ENTRY}]/" .claude/toulmin-state.local.md
+fi
 rm -f .claude/toulmin-state.local.md.bak
 ```
 
