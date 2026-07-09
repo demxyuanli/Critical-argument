@@ -1,145 +1,177 @@
 # Toulmin — 批判的論証フレームワーク
 
-[トゥールミン論証モデル](https://en.wikipedia.org/wiki/Stephen_Toulmin)に基づくClaude Codeプラグイン。「コーディング前の限定的検証」と「受け入れ前の反対討論」を3つの rigid Gate として制度化。Vibe CodingではL0シグナル検出と自動チェックポイントによりドリフトを識別する。中核的方法論：**Toulmin 批判的論証**。
-
 [English](README.en.md) | [中文](README.md)
 
----
+[トゥールミン論証モデル](https://en.wikipedia.org/wiki/Stephen_Toulmin)に基づくClaude Codeプラグイン。v1.2は「コーディング前の検証」と「受け入れ前の反対討論」を**完全な四象限レビュー体系**に拡張：内部論証（verify + debate）+ 外部論証（audit + premortem）+ 限定詞合成（qualify）+ Agent編成 + 行動木可視化（tree）+ コンテキストドリフト検出。
 
-## 1. 設計理論 — 9つの中核的主張
-
-各主張はトゥールミンの6要素（Claim, Ground, Warrant, Backing, Rebuttal, Qualifier）で構築。完全な論証連鎖は [`ai-failure-detection-framework.md`](ai-failure-detection-framework.md) を参照。
-
-### 主張1: 不確かな語調は誤りのシグナル
-
-> AIの結論文中の「かもしれない」「おそらく」は、モデルが複数の低信頼度トークン分岐の間で迷っていることを意味する——どのパスも暗黙の検証閾値を通過していない。
-
-**区別**: 結論修飾 = red flag；リスク警告 = 正当な工学的慎重さ。
-
-### 主張2: 回帰反復での繰り返し言及 = 認知的ドリフト
-
-> AIには構造化された「解決済み」状態マシンがない。長文脈でのattention重み減衰→初期に解決済みの議論が忘却→古いパターンが新発見として再活性化。
-
-**検出**: embedding類似度 + 論理的一貫性チェック。繰り返し + 新情報なし = ドリフト。
-
-### 主張3: 明確なロードマップや参照物がない → 汎化性なし
-
-> AIは抽象推論を行うのではなく、条件付き確率マッチングを行う。汎化には「複数インスタンスからの不変パターンの抽出」が必要——現在の仕様という単一インスタンスしかない場合、AIは本質的特徴と偶発的特徴を区別できない。
-
-### 主張4: 収束なきコーディング = 無価値
-
-> 設計段階の未解決問題は実装段階に入っても自己解決しない——技術的負債、境界バグ、アーキテクチャ衝突として再浮上する。AIは「疑似収束」の製造に長けている——流暢な要約で未解決問題を決着済みに見せかける。
-
-**収束基準**: 少なくとも1つのyes/no質問 + 全参加者が回答に合意。
-
-### 主張5: AIの推奨意見は厳格な証明が必要
-
-> AIに自己証明を要求すること = 判断負荷を人間からAIに戻すこと + レビュー対象を「結論の尤もらしさ」から「推論連鎖の追跡可能性」に変えること。AIの推論能力を検証に使い、生成能力を意思決定に使わない。
-
-**三段階証明**（信頼性順）: **境界**（失敗条件） > **反証**（代替案排除） > **溯源**（証拠引用）。
-
-### 主張6: 長距離タスクは構造化タスク文書が必須
-
-> plan→task→target→pseudocode→verify→regression チェーンの各ノードは独立した検証ゲート。制約がない場合、各ステップでのAIの出力空間が大きすぎる——正しさの確率はステップ数とともに指数関数的に減衰する。「次に...」という言語 = ナラティブモードであり実行モードではない。
-
-### 主張7: AIの「平滑性バイアス」が境界問題をシステム的に隠蔽
-
-> LLMの尤度最大化目標 + 自己回帰生成の平滑化ダイナミクス = 正常パスへのシステム的回帰。境界条件（null、極値、並行競合）は出力からシステム的に欠落する。
-
-### 主張8: 「完了した作業」に対するAIの幻覚蓄積
-
-> AIはコンパイラ/ランタイムを強制的現実フィードバックとして持たない。長い会話の中で仮定が徐々に「確認済み事実」に格上げされ、各エラー層が同じ表面的確信度を維持する。
-
-**2つのメカニズム**: 記憶ベース（文脈管理で緩和可能） vs 推論ベース（モデル知識バイアスに根ざし、文脈リセットでは解決不能）。
-
-### 主張9: 確認的レビューは未レビューと等価（補足）
-
-> 人間のレビュアーは自動化バイアス + 確証バイアスの二重作用を受ける——正しさの証拠を探し、誤りの証拠を探さない。**反駁を明示的目的とするレビュー（反対討論）のみがこのバイアスを打ち破る。**
+**9スキル · 2エージェント · 3フック · 7スクリプト · 10理論的主張**
 
 ---
 
-## 2. 検出フレームワーク — L0/L1/L2 階層モデル
+## 1. 設計理論 — 10の中核的主張
+
+完全な論証連鎖（6要素）は [`ai-failure-detection-framework.md`](ai-failure-detection-framework.md) を参照。
+
+| # | 主張 | メカニズム |
+|---|------|-----------|
+| 1 | 不確かな語調は誤りのシグナル | ヘッジ語密度 → 低信頼度；リスク警告とは区別 |
+| 2 | 繰り返し言及 = 認知的ドリフト | attention減衰 → 解決済み議論の忘却 → 旧パターン再活性化 |
+| 3 | 参照物なし → 汎化性なし | AIは条件付き確率マッチング、抽象推論ではない |
+| 4 | 収束なきコーディング = 無価値 | 設計問題は実装段階で自己解決しない；AIは「疑似収束」を製造 |
+| 5 | AI推奨意見は厳格な証明が必要 | 判断負荷を人間→AIへ；推論連鎖の追跡可能性をレビュー |
+| 6 | 長距離タスクは構造化文書必須 | 各ノードが独立検証ゲート；正しさ確率は指数関数的に減衰 |
+| 7 | 平滑性バイアスが境界問題を隠蔽 | 尤度最大化 → 正常パスへの回帰；境界条件がシステム的に欠落 |
+| 8 | 「完了した作業」への幻覚蓄積 | AIにコンパイラ/ランタイムフィードバックなし；仮定が「事実」に格上げ |
+| 9 | 確認的レビュー = 未レビュー | 自動化バイアス+確証バイアス；反対討論のみが打破 |
+| **10** | **内部論証には外部盲点がある** | **v3: モデル知識に締切と分布偏向 → 外部検証が必要** |
+
+---
+
+## 2. レビューツール行列 — 四象限モデル
+
+v1.2は全レビューツールを内部/外部 × 静的/動的の完全な行列に組織化：
 
 ```
-L0 シグナル層（継続的監視、ゼロコストフラグ）
-  ├─ ヘッジ語密度 > 閾値              → 信頼度不足
-  ├─ 隣接ターン意味的類似度            → 文脈飽和
-  ├─ 「次に/それから」密度スパイク     → ナラティブモード活性化
-  ├─ 低い境界処理カバレッジ            → 平滑性バイアス活性化
-  └─ 人間の応答時間減衰                → 注意力減衰（vibe専用）
-  ↓ フラグトリガー
-L1 検証層（オンデマンド、シグナル真偽判定）
-  ├─ ヘッジ語 → 確定的断言または明示的「不確か」を要求
-  ├─ 繰り返し → 新情報が導入されたか確認
-  └─ ナラティブ → 最近の「done」宣言に検証が伴うか確認
+                内部論証                    外部論証
+          (訓練データ+文書+コード)       (WebSearch+逆ナラティブ)
+    ┌─────────────────────────┬─────────────────────────┐
+静的 │ Gate 2: verify          │ audit                   │
+    │ L1-L4 + L3.5因果連鎖    │ WebSearch反証検索        │
+    │ 既知次元の正しさ検査      │ 外部事実への挑戦          │
+    ├─────────────────────────┼─────────────────────────┤
+動的 │ Gate 3: debate          │ premortem               │
+    │ R1-R3 反対討論           │ 失敗仮定→3つの死亡経路    │
+    │ D1-D6 攻撃次元           │ 物語的脆弱性の発見        │
+    └─────────────────────────┴─────────────────────────┘
+                              ↓
+                         qualify
+                    統一限定詞合成
+           (硬境界/軟境界/信頼度/監視トリガー)
+                              ↓
+                          tree
+                    行動木可視化
+           (Mermaid図 + 分区 + セッション間)
+```
+
+**完全性の原則**：任意の象限の欠落 = その盲点クラスが残留リスクとなる。ツールのスキップ = その盲点タイプへの明示的リスク受諾。
+
+---
+
+## 3. 検出フレームワーク — L0/L1/L2 + 分区追跡
+
+```
+L0 シグナル層（継続的、ゼロコスト）
+  ├─ ヘッジ密度 > 閾値              → 信頼度不足
+  ├─ 隣接ターン意味的類似度          → 文脈飽和
+  ├─ 「次に/それから」密度スパイク   → ナラティブモード
+  ├─ 低境界カバレッジ                → 平滑性バイアス
+  └─ 人間応答時間減衰                → 注意力減衰（vibe）
+  ↓ トリガー
+L1 検証層（オンデマンド）
   ↓ 検証失敗
-L2 介入層（進行阻止、強制修正）
-  └─ gate_blocked=true → PreToolUseフックがWrite/Editを拒否
+L2 介入層（進行阻止）
+  └─ gate_blocked=true → PreToolUseがWrite/Edit + Bash書込を拒否
+  ↓
+分区追跡（Stopフック ドリフト自己チェック）
+  ├─ Vibe: 各チェックポイント → ドリフト自己チェック注入
+  ├─ Structured: 30反復毎 → ドリフト自己チェック注入
+  └─ partition-track.sh 遷移記録 → toulmin-tree 可視化
 ```
 
 ---
 
-## 3. プロセスフレームワーク — 3つのGate
+## 4. プロセスフレームワーク — 3Gate + Agent編成
 
 ```
-plan → task → target ─┬─ [Gate 1: 方向収束] ──→ pseudocode → code → verify
-                      │    トゥールミン論証記録        ↑              ↓
-                      │    「なぜこの道か」       Gate 2:        Gate 3:
-                      │                        限定的検証      反対討論
-                      │                           L1-L4         R1-R3
-                      ↓                            ↓              ↓
-                   gate-1-convergence.md   gate-2-verify.md  gate-3-debate.md
+toulmin-plan (編成者)
+  │
+  ├─ plan → task → target
+  ├─ [Gate 1: 方向収束] ← あなた (編成者)
+  │     └─ トゥールミン論証記録
+  │
+  ├─ [Gate 2: 限定的検証] ← Agent(toulmin-verifier)  [隔離コンテキスト]
+  │     └─ L1-L4 + L3.5因果連鎖 → gate-2-verification.md
+  │
+  ├─ pseudocode → code → verify
+  │
+  ├─ [Gate 3: 反対討論] ← Agent(toulmin-debater)  [隔離コンテキスト]
+  │     └─ R1-R3 (D1-D6) → gate-3-debate.md
+  │
+  ├─ [オプション] audit → premortem → qualify → tree
+  │
+  └─ regression → complete
 ```
 
-### Gate 1 — 方向収束
-**トゥールミン形式**: Claim/Ground/Warrant/Backing/Rebuttal/Qualifier。設計判断、却下された代替案とその理由、判断の有効範囲と失効条件を記録。
+### Gate 1 — 方向収束（編成者が実行）
+トゥールミン形式: Claim/Ground/Warrant/Backing/Rebuttal/Qualifier
 
-### Gate 2 — 限定的検証（L1-L4）
-**L1 仮説棚卸**: 設計が依存する全仮説を列挙、リスク階層化、緩和または明示的受け入れ。  
-**L2 境界行列**: 入力/状態/環境次元 × 処理戦略（または明示的「非対応」）。  
-**L3 故障モードウォークスルー**: 主要モジュールごとに最も可能性の高い3つの故障 + 爆発半径 + 単一障害点チェック。  
-**L3.5 因果連鎖追跡**: 高重大度障害に対し、L1仮説+L2境界+コード構造から因果連鎖を導出（AND/OR辺）。ユーザーへの質問なし。  
-**L4 「この設計を殺す一つのこと」**: 致命的仮説の特定。信頼度評価（高/中/低）。
+### Gate 2 — 限定的検証（Agent派发）
+`toulmin-verifier` Agentを派发 — 隔離コンテキスト、計画会話に非汚染。  
+**L1** 仮説棚卸 | **L2** 境界行列 | **L3** 故障モード | **L3.5** 因果連鎖 | **L4** 「設計を殺す一事」
 
-### Gate 3 — 反対討論（R1-R3）
-**R1 構造的異議**: 反対者がD1-D6攻撃次元（正当性/完全性/一貫性/堅牢性/セキュリティ/保守性）で証拠を挙げて攻撃。役割分離のため `toulmin-debater` エージェントの使用を推奨。  
-**R2 応答**: 各指摘に応答——[ACCEPT]/[REBUT]/[CLARIFY]/[DEMOTE]。[IGNORE]と[VAGUE]は禁止。  
-**R3 反論 + 評決**: REBUTとCLARIFY項目を再検討→最終評決 ✅/⚠️/❌。
+### Gate 3 — 反対討論（Agent派发）
+`toulmin-debater` Agentを派发 — 役割分離、目的はREFUTE。  
+**R1** D1-D6攻撃 | **R2** [ACCEPT/REBUT/CLARIFY/DEMOTE] | **R3** 評決 ✅/⚠️/❌
+
+### 外部レビューツール（手動起動）
+| ツール | 象限 | 機能 |
+|------|------|------|
+| `/toulmin:toulmin-audit` | 外部-静的 | WebSearchで反例・代替案・境界障害を検索 |
+| `/toulmin:toulmin-premortem` | 外部-動的 | 失敗仮定→3つの因果死亡経路を逆導出 |
+| `/toulmin:toulmin-qualify` | 合成 | 全発見を集約→硬/軟境界+信頼度 |
+| `/toulmin:toulmin-tree` | 可視化 | Mermaid行動木 + 分区履歴 + セッション間参照 |
 
 ---
 
-## 4. Vibe Coding プロトコル
+## 5. Agent編成アーキテクチャ
 
-Vibeモードの4つの暗黙的前提とその破綻シグナル：
+toulmin-planがプロンプト駆動スキルからAgent編成者にアップグレード：
 
-| 前提 | 破綻シグナル |
-|------|-------------|
-| 短いフィードバック ≈ 高品質設計 | 第Kラウンドの案が第K-Nラウンドと衝突 |
-| 訓練分布が問題空間をカバー | 中核ロジックにヘッジ語 |
-| Vibe-checkが有効な検証 | 「正常に見える」が実行可能な検証基準なし |
-| タスクがvibe-sizeチャンクに分解可能 | 1反復の変更が別モジュールを破壊 |
+| 役割 | 実行者 | コンテキスト | 責務 |
+|------|--------|-------------|------|
+| 編成者 | あなた (toulmin-plan) | 完全会話 | 問題定義、タスク分解、Gate 1、実装 |
+| 検証Agent | `toulmin-verifier` | **隔離** | L1-L4 + L3.5因果連鎖。計画議論に非接触 |
+| 討論Agent | `toulmin-debater` | **隔離** | D1-D6攻撃。設計判断への感情的依附なし |
 
-### 複合チェックポイントトリガー
+**なぜAgentか？** Skillsは編成者コンテキストで実行—検証結果が計画会話に汚染される。Agentは隔離コンテキスト：検証者はトレードオフ議論を知らず、討論者は設計決定に依附しない。この隔離が真の敵対的レビューのメカニズム。
+
+---
+
+## 6. フレームワーク退化防御
+
+Premortemがtoulmin自身を分析し3つの退化経路を特定、すべて防御済み：
+
+| パターン | メカニズム | 防御 |
+|---------|-----------|------|
+| **形式が実質を代替** | overrideがデフォルト反射に | クールダウン+段階的摩擦+比率追跡 |
+| **プラットフォーム盲点** | headless/bypass/subagentでフック無音故障 | 5盲点表示+反復クロスチェック |
+| **知識の埋没** | gate文書が書いて忘れられる | SessionStart履歴スキャン+類似タスク照合 |
+
+---
+
+## 7. Vibe Codingプロトコル
+
+チェックポイント + VAC + ドリフト自己チェックの三層安全網。
 
 | トリガー | アクション |
 |---------|-----------|
-| 反復 % N == 0 (N=20) | Stopフックブロック → L0スキャンタスク注入 |
-| gate_blocked=true | Stopフックブロック → 「Gate未通過、完了を主張できない」 |
-| スループット減衰（5ラウンド<20行、新機能なし） | vibe慣性を警告 → /toulmin-plan を提案 |
+| 反復 % N == 0 (N=20) | Stopブロック → L0スキャン + **ドリフト自己チェック** |
+| gate_blocked=true | Stopブロック → 完了主張不可 |
+| スループット減衰 | vibe慣性警告 → /toulmin-plan提案 |
 
 ### VAC — Vibe Adversarial Check（60秒）
-「反対者モードに切り替え。このコードが壊れる具体的シナリオを3つ示せ。それぞれ'If...then...'で始め、具体的な入力または条件を記述せよ。」
+「反対者モードに切替。このコードが壊れる3つの具体的シナリオを示せ。」
 
 ---
 
-## 5. インストール
+## 8. インストール
 
 ```bash
-# グローバルインストール（全プロジェクトで利用可能）
+# グローバルインストール
 cp -r toulmin ~/.claude/skills/toulmin
 
 # zip経由
-claude plugin install ./toulmin-1.0.1.zip --scope user
+claude plugin install ./toulmin-1.2.0.zip --scope user
 
 # 開発モード
 claude --plugin-dir ./toulmin
@@ -147,124 +179,113 @@ claude --plugin-dir ./toulmin
 
 ---
 
-## 6. コマンドリファレンス
+## 9. コマンドリファレンス
 
 | コマンド | 用途 | 起動 |
 |---------|------|------|
-| `/toulmin:toulmin-plan "task" --lang zh` | 構造化実行エントリ | 手動 |
-| `/toulmin:toulmin-vibe --lang zh` | Vibe coding + ドリフト検出 | 手動 |
-| `/toulmin:toulmin-verify` | L1-L4検証（Gate 2） | Plan委譲 / vibe単独 |
-| `/toulmin:toulmin-debate` | R1-R3討論（Gate 3） | Plan委譲 / vibe単独 |
-| `/toulmin:toulmin-status` | フレームワーク状態表示（読取専用） | 手動 / チェックポイント |
-| `/toulmin:toulmin-override "理由"` | 失敗gateの手動却下（リスク受諾を記録） | 手動 |
-| `/toulmin:toulmin-audit "主張"` | 外部証拠検証 — 反例・代替案・境界外障害をWeb検索 | 手動（gate文書候補表から） |
-| `/toulmin:toulmin-premortem` | 失敗遡及推演 — 失敗を仮定し3つの因果連鎖を逆導出 | 手動（Gate 2/3通過後） |
-| `/toulmin:toulmin-qualify` | 統一限定詞合成 — 全ツール発見を集約し精確な有効範囲を宣言 | 手動（全レビューツール完了後） |
-| `/toulmin:toulmin-tree` | 行動木可視化 — タスク+gate+分区+セッション間参照のMermaid図 | 手動 / 状態確認 |
+| `/toulmin:toulmin-plan "task" --lang zh` | Agent編成の構造化エントリ | 手動 |
+| `/toulmin:toulmin-vibe --lang zh` | Vibe coding + チェックポイント + ドリフト | 手動 |
+| `/toulmin:toulmin-verify` | L1-L4検証（Gate 2） | PlanがAgent派发 / vibe単独 |
+| `/toulmin:toulmin-debate` | R1-R3討論（Gate 3） | PlanがAgent派发 / vibe単独 |
+| `/toulmin:toulmin-audit "主張"` | 外部証拠検証（WebSearch） | 手動（gate文書候補表） |
+| `/toulmin:toulmin-premortem` | 失敗遡及推演（3死亡経路） | 手動（Gate 2/3通過後） |
+| `/toulmin:toulmin-qualify` | 統一限定詞合成 | 手動（全レビュー後） |
+| `/toulmin:toulmin-tree` | 行動木可視化（Mermaid） | 手動 / 状態確認 |
+| `/toulmin:toulmin-status` | フレームワーク状態 + 整合性 | 手動 / チェックポイント |
+| `/toulmin:toulmin-override "理由"` | 手動gate却下（クールダウン追跡） | 手動 |
 
 ---
 
-## 7. プラグインアーキテクチャ
+## 10. プラグインアーキテクチャ
 
 ```
 toulmin/
 ├── skills/                       # 9スキル
-│   ├── toulmin-plan/SKILL.md     #   構造化エントリ: p→t→t→gate制御フロー
-│   ├── toulmin-vibe/SKILL.md     #   Vibeエントリ: チェックポイント/VAC/モード遷移
-│   ├── toulmin-verify/SKILL.md   #   Gate 2: L1-L4 + gate文書書込
-│   ├── toulmin-debate/SKILL.md   #   Gate 3: R1-R3 + gate文書書込
-│   ├── toulmin-audit/SKILL.md   #   外部証拠検証（WebSearch反証検索）
-│   ├── toulmin-premortem/SKILL.md #   失敗遡及推演（失敗仮定→逆因果連鎖）
-│   ├── toulmin-qualify/SKILL.md  #   統一限定詞合成（集約→精確な有効範囲）
-│   ├── toulmin-tree/SKILL.md    #   行動木可視化（Mermaid図+分区+セッション間）
-│   └── toulmin-status/SKILL.md   #   読取専用状態サマリ
+│   ├── toulmin-plan/SKILL.md     #   Agent編成: plan→gates→agents→regression
+│   ├── toulmin-vibe/SKILL.md     #   Vibeエントリ: checkpoint/VAC/モード遷移
+│   ├── toulmin-verify/SKILL.md   #   Gate 2: L1-L4 + gate文書 + 候補表
+│   ├── toulmin-debate/SKILL.md   #   Gate 3: R1-R3 + gate文書 + 候補表
+│   ├── toulmin-audit/SKILL.md   #   外部検証: WebSearch → STANDS/NARROW/REFUTED
+│   ├── toulmin-premortem/SKILL.md #   遡及推演: 3死亡経路 + 防御提案
+│   ├── toulmin-qualify/SKILL.md  #   限定詞合成: 境界 + 信頼度 + 監視
+│   ├── toulmin-tree/SKILL.md    #   行動木: Mermaid + 分区 + セッション間
+│   └── toulmin-status/SKILL.md   #   状態 + 整合性 + override統計
 ├── hooks/
-│   └── hooks.json                # 3フック登録
+│   └── hooks.json                # PreToolUse(Write/Edit+Bash) + Stop + SessionStart
 ├── scripts/
-│   ├── lib/
-│   │   └── state.sh              #   共有state解析 + セッション分離 + デフォルト値
-│   ├── update-gate.sh            #   統合gate状態更新（アトミックsed）
-│   ├── pre-tool-use.sh           #   gate_blocked=true → Write/Edit拒否
-│   ├── bash-guard.sh             #   gate_blocked=true → Bashファイル書込迂回拒否
-│   ├── partition-track.sh        #   コンテキスト分区遷移記録（ドリフト検出）
-│   ├── stop-hook.sh              #   反復カウンタ + 完了ブロック + チェックポイント注入
-│   └── session-start.sh          #   復元ポインタ addContext
+│   ├── lib/state.sh              #   共有解析 + セッション分離 + 12フィールド既定値
+│   ├── update-gate.sh            #   Gate状態更新 (アトミックsed + 冪等)
+│   ├── pre-tool-use.sh           #   gate_blocked → Write/Edit拒否
+│   ├── bash-guard.sh             #   gate_blocked → Bash書込迂回拒否
+│   ├── partition-track.sh        #   分区遷移記録
+│   ├── stop-hook.sh              #   反復 + 完了ブロック + checkpoint + ドリフトチェック
+│   └── session-start.sh          #   復元ポインタ + 履歴スキャン + 類似タスク照合
 ├── agents/
-│   ├── toulmin-debater.md        #   反対審査者: D1-D6攻撃次元
-│   └── toulmin-verifier.md       #   検証者: L1-L4検証層
-├── .claude-plugin/
-│   └── plugin.json
-├── README.md
-├── README.en.md
-└── README.ja.md
+│   ├── toulmin-debater.md        #   反対者: D1-D6攻撃 (隔離コンテキスト)
+│   └── toulmin-verifier.md       #   検証者: L1-L4 + 因果連鎖 (隔離コンテキスト)
+├── .claude-plugin/plugin.json
+├── README.md / README.en.md / README.ja.md
+└── ai-failure-detection-framework.md  # 完全理論文書 (10主張 + 10章)
 ```
 
 ### 実装パターン
 
-**エージェント編成**（toulmin-plan）: 編成者がproblem定義 + task分解 + Gate 1 + 実装を担当。Gate 2（verify）とGate 3（debate）は専用エージェントに派发——エージェントは隔離コンテキストで実行され、計画会話がレビュー結果を汚染しない。
+**Agent編成**: 編成者がproblem + 分解 + Gate 1 + 実装を担当。Gate 2/3は隔離Agentに派发。レビュー結果が計画会話に非汚染。
 
-**grill-meパターン**（純粋プロンプト駆動）: 9スキル + 2エージェント。言語制約による行動誘導——フック不要。
+**grill-me** (純粋プロンプト): 9スキル + 2エージェント。言語制約で行動誘導。
 
-**ralph-loopパターン**（フック + stateファイル）: 3フックスクリプト + `.claude/toulmin-state.local.md`。ハード強制にはライフサイクルインターセプトが必要；状態にはクロスターン永続化が必要。
+**ralph-loop** (フック + state): 3フック + `.claude/toulmin-state.local.md`。ライフサイクル遮断で強制。
 
-**フック強制力の既知の制限**（`toulmin-audit` レビュー参照）:
+**フック制限** (toulmin-audit検証済):
 - ✅ 対話モード + exit code 2 → 決定的ブロック
-- ❌ headless `-p` モード → フック呼出なし
-- ❌ `--dangerously-skip-permissions` → 非同期、拒否が遅延
-- ❌ サブエージェントツール呼出 → PreToolUse未発火
-- ⚠️ Bash書込迂回 → `bash-guard.sh` でカバー（sed/echo>/tee等）
+- ❌ headless `-p` → フック未発火; subagent呼出 → PreToolUse未発火
+- ⚠️ Bash迂回 → bash-guard.sh; bypassモード → 非同期遅延
 
-**共有インフラストラクチャ**:
-- `scripts/lib/state.sh` — 統一frontmatter解析、セッション分離、フィールドデフォルト値。全3フックが `source` で再利用。
-- `scripts/update-gate.sh` — 統合gate状態更新。アトミックsed、冪等追加、gate名ホワイトリスト検証。toulmin-plan/verify/debateが `${CLAUDE_PLUGIN_ROOT}` 経由で呼出。
-
-**stateファイル設計** — 最小限、フック判断フィールドのみ:
+**Stateファイル**:
 ```yaml
 ---
-gate_blocked: false     # PreToolUseがこのフィールドをチェック
-phase: plan             # 現在のフェーズ
-session_id: xxx         # Stopフックのセッション分離用
-iteration: 0            # Stopフックがインクリメント、チェックポイント検出
-gate_dir: docs/toulmin/2026-06-27-xxx/  # gate文書パス
-gates_passed: [gate-1]  # 通過済みgateリスト
+gate_blocked: false     # PreToolUseチェック
+phase: plan             # plan|task|gate-1|gate-2|code|verify|gate-3|regression|complete
+iteration: 0            # Stopフック増分
+gate_dir: docs/toulmin/YYYY-MM-DD-<slug>/
+gates_passed: [gate-1]  # 通過済gate
 gate_current: gate-2    # アクティブgate
-ca_mode: structured     # structured | vibe
-lang: zh                # 出力言語
-checkpoint_interval: 20 # vibeチェックポイント間隔（0=無効）
-gate_attempts: 0        # gate再試行カウンタ（表示のみ、自動動作なし）
-override_count: 0       # セッションoverride総数（クールダウン追跡）
-override_history: []    # override記録 [gate@round, ...]
-partitions: ["task"]    # コンテキスト分区追跡 ["src→dst@iteration:reason", ...]
-partition_current: task # 現在のアクティブ分区
+ca_mode: structured     # structured|vibe
+lang: zh                # zh|en
+checkpoint_interval: 20 # vibeチェックポイント間隔
+gate_attempts: 0        # 再試行カウンタ
+override_count: 0       # override総数 (クールダウン)
+override_history: []    # [gate@round, ...]
+partitions: ["task"]    # [src→dst@iteration:reason, ...]
+partition_current: task # アクティブ分区
 ---
 ```
 
 ---
 
-## 8. プロジェクト成果物
+## 11. プロジェクト成果物
 
 ```
 docs/toulmin/YYYY-MM-DD-<task-slug>/
-  gate-1-convergence.md    # 方向論証（Claim/Ground/Warrant/Backing/Rebuttal/Qualifier）
-  gate-2-verification.md   # L1-L4結果（層ごとにトゥールミン形式）
+  gate-1-convergence.md    # 方向論証 (トゥールミン6要素)
+  gate-2-verification.md   # L1-L4 + L3.5因果連鎖 + fact-check候補
   gate-3-debate.md         # R1-R3 + [ACCEPT/REBUT/CLARIFY/DEMOTE] + 評決
+  qualifier.md             # 統一限定詞 (硬/軟境界 + 信頼度 + 監視)
 
-.claude/toulmin-state.local.md  # フック判断状態（タスク完了時にクリーンアップ）
+.claude/toulmin-state.local.md  # フック判断状態 (タスク完了時にクリーン)
 ```
 
-Gate文書は**第三者論証記録**——プラグインや会話文脈から独立。失敗したgateも同様に記録される（「なぜこの道が塞がれたか」）、将来の参照用。
+Gate文書は**第三者論証記録**。qualifier.mdは設計の精確な契約。
 
 ---
 
-## 9. 上流ツールとの連携
+## 12. バージョン履歴
 
-Toulminは独立して動作——brainstormingや他のツールへの依存なし。プロジェクトに設計文書（spec）が存在する場合、gate文書は1行の参照でリンク：
-
-```markdown
-> 上流設計文書: docs/superpowers/specs/2026-06-27-role-based-auth-design.md
-```
-
-上流なし → 独立動作。Toulminフレームワークは疎結合。
+| バージョン | 日付 | 主要追加 |
+|-----------|------|---------|
+| v1.0.1 | 2026-06 | 基盤: 5スキル + 3フック + L0-L2 + 3Gate + Vibe |
+| v1.1.0 | 2026-07 | v3 外部レビュー: audit + premortem + qualify + 退化防御 |
+| v1.2.0 | 2026-07 | v2 Agent編成 + tree + 分区追跡 + ドリフト自己チェック |
 
 ---
 

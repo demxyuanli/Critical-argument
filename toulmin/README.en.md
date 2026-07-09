@@ -1,145 +1,177 @@
 # Toulmin — Critical Argumentation Framework
 
-A Claude Code plugin based on the [Toulmin Argumentation Model](https://en.wikipedia.org/wiki/Stephen_Toulmin). Institutionalizes "limited verification before coding" and "adversarial debate before acceptance" as three rigid Gates. In vibe coding, detects drift through L0 signal monitoring and automatic checkpoints. Core methodology: **Toulmin Critical Argumentation**.
-
 [中文](README.md) | [日本語](README.ja.md)
 
----
+A Claude Code plugin based on the [Toulmin Argumentation Model](https://en.wikipedia.org/wiki/Stephen_Toulmin). v1.2 expands "verification before coding" and "adversarial debate before acceptance" into a **complete four-quadrant review system**: internal argumentation (verify + debate) + external argumentation (audit + premortem) + qualifier synthesis (qualify) + agent orchestration + behavior tree visualization (tree) + context drift detection.
 
-## 1. Design Theory — 9 Core Claims
-
-Each claim is constructed with Toulmin's six elements (Claim, Ground, Warrant, Backing, Rebuttal, Qualifier). Full argumentation chain in [`ai-failure-detection-framework.md`](ai-failure-detection-framework.md).
-
-### Claim 1: Uncertain language signals error
-
-> Hedge words ("maybe", "probably") in AI conclusions mean the model is vacillating between low-confidence token branches — no path passes the implicit verification threshold.
-
-**Distinction**: Conclusion modifiers = red flag; risk qualifiers = legitimate engineering prudence.
-
-### Claim 2: Repeated mentions in regression = cognitive drift
-
-> AI has no structured "resolved" state machine. Attention weight decay in long contexts → early settled discussions forgotten → old patterns reactivated as new discoveries.
-
-**Detection**: embedding similarity + logical coherence check. Repetition + no new information = drift.
-
-### Claim 3: No clear roadmap or reference → no generalization
-
-> AI does not abstract-reason; it does conditional probability matching. Generalization requires "extracting invariant patterns from multiple instances" — with only one instance (the current spec), AI cannot distinguish essential from accidental features.
-
-### Claim 4: Coding without convergence = worthless
-
-> Unresolved design issues do not self-resolve by entering implementation — they resurface as technical debt, boundary bugs, and architectural conflicts. AI excels at manufacturing "pseudo-convergence" — fluent summaries that package unresolved issues as settled.
-
-**Convergence criterion**: at least one yes/no question + all participants agree on the answer.
-
-### Claim 5: AI recommendations must be rigorously proven
-
-> Demanding self-proof from AI = shifting the judgment burden from human back to AI + changing the review object from "conclusion plausibility" to "reasoning chain traceability." Use AI's reasoning capability for verification, not its generation capability for decision-making.
-
-**Three-tier proof** (reliability order): **Boundary** (failure conditions) > **Counter-evidence** (alternative exclusion) > **Traceability** (evidence citation).
-
-### Claim 6: Long-range tasks require structured task documents
-
-> Each node in plan→task→target→pseudocode→verify→regression is an independent verification gate. Without constraints, AI's output space at each step is too large — correctness probability decays exponentially with step count. "Next we will..." language = narrative mode, not execution mode.
-
-### Claim 7: AI's "smoothness bias" systematically masks boundary issues
-
-> LLM likelihood-maximization objective + autoregressive generation's smoothing dynamics = systemic regression toward normal paths. Boundary conditions (null, extreme values, concurrent conflicts) are systematically absent from output.
-
-### Claim 8: AI hallucination accumulation on "completed work"
-
-> AI lacks compilers/runtimes as mandatory reality feedback. In long conversations, assumptions progressively upgrade to "confirmed facts", with each error layer maintaining equal surface confidence.
-
-**Two mechanisms**: memory-based (mitigated by context management) vs. inference-based (rooted in model knowledge bias, unresolvable by context reset).
-
-### Claim 9: Confirmatory review equals no review (supplementary)
-
-> Human reviewers face automation bias + confirmation bias simultaneously — seeking evidence of correctness, not evidence of error. **Only review with refutation as its explicit objective (adversarial debate) breaks this bias.**
+**9 skills · 2 agents · 3 hooks · 7 scripts · 10 theoretical claims**
 
 ---
 
-## 2. Detection Framework — L0/L1/L2 Layered Model
+## 1. Design Theory — 10 Core Claims
+
+Full Toulmin argument chains (6 elements each) in [`ai-failure-detection-framework.md`](ai-failure-detection-framework.md).
+
+| # | Claim | Mechanism |
+|---|-------|-----------|
+| 1 | Uncertain language signals error | Hedge-word density → low confidence; distinct from risk warnings |
+| 2 | Repeated mentions = cognitive drift | Attention decay → forgotten discussions → old patterns reactivated |
+| 3 | No reference → no generalization | AI does conditional probability matching, not abstract reasoning |
+| 4 | Coding without convergence = worthless | Design issues don't self-resolve; AI manufactures "pseudo-convergence" |
+| 5 | AI recommendations must be proven | Shift judgment burden human→AI; review reasoning chain, not conclusion |
+| 6 | Long-range tasks need structured docs | Each node = independent gate; correctness decays exponentially |
+| 7 | Smoothness bias masks boundary issues | Likelihood maximization → regression toward normal paths |
+| 8 | Hallucination accumulation on "done" | AI lacks compiler/runtime feedback; assumptions become "confirmed facts" |
+| 9 | Confirmatory review = no review | Automation bias + confirmation bias; only adversarial review breaks it |
+| **10** | **Internal argumentation has external blind spots** | **v3: models have knowledge cutoffs + distribution bias → external verification required** |
+
+---
+
+## 2. Review Tool Matrix — Four-Quadrant Model
+
+v1.2 organizes all review tools into a complete internal/external × static/dynamic matrix:
 
 ```
-L0 Signal Layer (continuous monitoring, zero-cost flagging)
-  ├─ Hedge-word density > threshold        → insufficient confidence
-  ├─ Adjacent-turn semantic similarity     → context saturation
-  ├─ "Next/then" density spike            → narrative mode active
-  ├─ Low boundary-handling coverage        → smoothness bias active
-  └─ Human response-time decay             → attention decay (vibe-specific)
-  ↓ flag triggers
-L1 Verification Layer (on-demand, confirms signal authenticity)
-  ├─ Hedge words → demand definite assertion or explicit "uncertain"
-  ├─ Repetition  → check if new information introduced
-  └─ Narrative   → check if recent "done" claims have verification
+                Internal                    External
+          (training data+docs+code)    (WebSearch+reverse narrative)
+    ┌─────────────────────────┬─────────────────────────┐
+Static│ Gate 2: verify          │ audit                   │
+    │ L1-L4 + L3.5 causal     │ WebSearch counter-evidence│
+    │ Known-dimension checks   │ Challenge external facts │
+    ├─────────────────────────┼─────────────────────────┤
+Dynamic│ Gate 3: debate         │ premortem               │
+    │ R1-R3 adversarial       │ Assume failure→3 death paths│
+    │ D1-D6 attack dimensions │ Narrative vulnerabilities │
+    └─────────────────────────┴─────────────────────────┘
+                              ↓
+                         qualify
+                Unified qualifier synthesis
+         (hard/soft boundaries + confidence + monitors)
+                              ↓
+                          tree
+                Behavior tree visualization
+           (Mermaid diagram + partitions + cross-session)
+```
+
+**Completeness principle**: Missing any quadrant leaves that class of blind spot as residual risk. Skipping a tool = explicit risk acceptance for that blind spot type.
+
+---
+
+## 3. Detection Framework — L0/L1/L2 + Partition Tracking
+
+```
+L0 Signal Layer (continuous, zero-cost)
+  ├─ Hedge density > threshold        → confidence deficit
+  ├─ Adjacent-turn semantic similarity → context saturation
+  ├─ "Next/then" density spike        → narrative mode
+  ├─ Low boundary coverage            → smoothness bias
+  └─ Human response-time decay        → attention decay (vibe)
+  ↓ triggers
+L1 Verification Layer (on-demand)
   ↓ verification fails
-L2 Intervention Layer (blocks progress, forces correction)
-  └─ gate_blocked=true → PreToolUse hook denies Write/Edit
+L2 Intervention Layer (blocks progress)
+  └─ gate_blocked=true → PreToolUse denies Write/Edit + Bash file writes
+  ↓
+Partition Tracking (Stop hook drift self-check)
+  ├─ Vibe mode: every checkpoint → inject drift self-check
+  ├─ Structured mode: every 30 iterations → inject drift self-check
+  └─ partition-track.sh records shifts → toulmin-tree visualizes
 ```
 
 ---
 
-## 3. Process Framework — Three Gates
+## 4. Process Framework — Three Gates + Agent Orchestration
 
 ```
-plan → task → target ─┬─ [Gate 1: Convergence] ──→ pseudocode → code → verify
-                      │    Toulmin argument record       ↑              ↓
-                      │    "Why this path"          Gate 2:       Gate 3:
-                      │                          Verification    Debate
-                      │                             L1-L4         R1-R3
-                      ↓                              ↓              ↓
-                   gate-1-convergence.md   gate-2-verify.md  gate-3-debate.md
+toulmin-plan (orchestrator)
+  │
+  ├─ plan → task → target
+  ├─ [Gate 1: Convergence] ← YOU (orchestrator)
+  │     └─ Toulmin argument record
+  │
+  ├─ [Gate 2: Verification] ← Agent(toulmin-verifier)  [isolated context]
+  │     └─ L1-L4 + L3.5 causal trace → gate-2-verification.md
+  │
+  ├─ pseudocode → code → verify
+  │
+  ├─ [Gate 3: Debate] ← Agent(toulmin-debater)  [isolated context]
+  │     └─ R1-R3 (D1-D6) → gate-3-debate.md
+  │
+  ├─ [optional] audit → premortem → qualify → tree
+  │
+  └─ regression → complete
 ```
 
-### Gate 1 — Direction Convergence
-**Toulmin format**: Claim/Ground/Warrant/Backing/Rebuttal/Qualifier. Records design decisions, rejected alternatives with reasons, decision validity scope and expiration conditions.
+### Gate 1 — Direction Convergence (orchestrator)
+Toulmin format: Claim/Ground/Warrant/Backing/Rebuttal/Qualifier. Records decisions, rejected alternatives, validity scope, expiration conditions.
 
-### Gate 2 — Limited Verification (L1-L4)
-**L1 Assumption Inventory**: List every design assumption, risk-tier, mitigate or explicitly accept.  
-**L2 Boundary Matrix**: Input/state/environment dimensions × handling strategy (or explicit "not handled").  
-**L3 Failure Walkthrough**: 3 most-likely failures per key module + blast radius + single-point-of-failure check.  
-**L3.5 Causal Trace**: For high-severity failures, derive causal chains from L1 assumptions + L2 boundaries + code structure (AND/OR edges). No user questions.  
-**L4 "One Thing That Kills This Design"**: Identify the fatal assumption. Confidence rating (high/medium/low).
+### Gate 2 — Limited Verification (agent dispatch)
+Dispatches `toulmin-verifier` agent — isolated context, uncontaminated by planning.  
+**L1** Assumption inventory | **L2** Boundary matrix | **L3** Failure walkthrough | **L3.5** Causal trace | **L4** "One thing that kills this design"
 
-### Gate 3 — Adversarial Debate (R1-R3)
-**R1 Structural Challenge**: Adversary attacks with D1-D6 dimensions (correctness/completeness/consistency/robustness/security/maintainability). Use `toulmin-debater` agent for role separation.  
-**R2 Response**: Respond per finding — [ACCEPT]/[REBUT]/[CLARIFY]/[DEMOTE]. [IGNORE] and [VAGUE] forbidden.  
-**R3 Rebuttal + Verdict**: Re-examine REBUT and CLARIFY items → final verdict ✅/⚠️/❌.
+### Gate 3 — Adversarial Debate (agent dispatch)
+Dispatches `toulmin-debater` agent — role separation, objective is REFUTE not evaluate.  
+**R1** D1-D6 attacks | **R2** [ACCEPT/REBUT/CLARIFY/DEMOTE] | **R3** Verdict ✅/⚠️/❌
+
+### External Review Tools (manual invocation)
+| Tool | Quadrant | Function |
+|------|----------|----------|
+| `/toulmin:toulmin-audit` | External-Static | WebSearch for counter-examples, alternatives, boundary failures |
+| `/toulmin:toulmin-premortem` | External-Dynamic | Assume failure → reverse-engineer 3 causal death paths |
+| `/toulmin:toulmin-qualify` | Synthesis | Aggregate all findings → hard/soft boundaries + confidence |
+| `/toulmin:toulmin-tree` | Visualization | Mermaid behavior tree + partition history + cross-session refs |
 
 ---
 
-## 4. Vibe Coding Protocol
+## 5. Agent Orchestration Architecture
 
-Vibe mode's 4 implicit assumptions and their rupture signals:
+toulmin-plan upgraded from prompt-driven skill to agent orchestrator:
 
-| Assumption | Rupture Signal |
-|------------|---------------|
-| Short feedback ≈ quality design | Round-K proposal conflicts with round-K-N |
-| Training distribution covers problem space | Hedge words on core logic |
-| Vibe-check is effective verification | "Looks normal" but no executable verification |
-| Task decomposable into vibe-size chunks | One iteration's change breaks another module |
+| Role | Executor | Context | Responsibility |
+|------|----------|---------|----------------|
+| Orchestrator | YOU (toulmin-plan) | Full conversation | Problem, decomposition, Gate 1, implementation |
+| Verifier Agent | `toulmin-verifier` | **Isolated** | L1-L4 + L3.5 causal trace. No planning discussion |
+| Debater Agent | `toulmin-debater` | **Isolated** | D1-D6 attacks. No attachment to design decisions |
 
-### Combined checkpoint triggers
+**Why agents?** Skills run in orchestrator context — verification tainted by planning conversation. Agents have isolated contexts: the verifier doesn't know what tradeoffs were discussed, the debater has no attachment to design decisions. This isolation is the mechanism for genuine adversarial review.
+
+---
+
+## 6. Framework Degradation Defense
+
+Premortem analysis of toulmin itself identified three degradation patterns, all defended:
+
+| Pattern | Mechanism | Defense |
+|---------|-----------|---------|
+| **Form over substance** | Override becomes default reflex | Cooldown + escalating friction + ratio tracking |
+| **Platform blind spot** | Hooks fail silently in headless/bypass/subagent | Status shows 5 blind spots + iteration cross-check |
+| **Knowledge burial** | Gate docs written then forgotten | SessionStart scans history + similar task matching |
+
+---
+
+## 7. Vibe Coding Protocol
+
+Three-layer safety net: checkpoints + VAC + drift self-check.
 
 | Trigger | Action |
 |---------|--------|
-| iteration % N == 0 (N=20) | Stop hook block → inject L0 scan task |
-| gate_blocked=true | Stop hook block → "Gate not passed, cannot claim completion" |
-| Throughput decay (5 rounds <20 lines, no new functionality) | Alert vibe inertia → suggest /toulmin-plan |
+| iteration % N == 0 (N=20) | Stop hook block → L0 scan + **drift self-check** |
+| gate_blocked=true | Stop hook block → cannot claim completion |
+| Throughput decay | Alert vibe inertia → suggest /toulmin-plan |
 
 ### VAC — Vibe Adversarial Check (60s)
-"Switch to adversary mode. Give me three specific scenarios where this code breaks. Each must start with 'If...then...' and describe a concrete input or condition."
+"Switch to adversary mode. Give me three specific scenarios where this code breaks."
 
 ---
 
-## 5. Installation
+## 8. Installation
 
 ```bash
-# Global install (all projects)
+# Global install
 cp -r toulmin ~/.claude/skills/toulmin
 
 # Via zip
-claude plugin install ./toulmin-1.0.1.zip --scope user
+claude plugin install ./toulmin-1.2.0.zip --scope user
 
 # Development mode
 claude --plugin-dir ./toulmin
@@ -147,123 +179,113 @@ claude --plugin-dir ./toulmin
 
 ---
 
-## 6. Command Reference
+## 9. Command Reference
 
 | Command | Purpose | Invocation |
 |---------|---------|------------|
-| `/toulmin:toulmin-plan "task" --lang zh` | Structured execution entry | Manual |
-| `/toulmin:toulmin-vibe --lang zh` | Vibe coding + drift detection | Manual |
-| `/toulmin:toulmin-verify` | L1-L4 verification (Gate 2) | Plan delegate / vibe standalone |
-| `/toulmin:toulmin-debate` | R1-R3 debate (Gate 3) | Plan delegate / vibe standalone |
-| `/toulmin:toulmin-status` | View framework status (read-only) | Manual / checkpoint |
-| `/toulmin:toulmin-override "reason"` | Manually override failed gate (records risk acceptance) | Manual |
-| `/toulmin:toulmin-audit "claim"` | External evidence verification — search counter-examples, alternatives, boundary failures | Manual (gate doc candidate table) |
-| `/toulmin:toulmin-premortem` | Prospective hindsight — assume failure, reverse-engineer 3 causal death paths | Manual (after Gate 2/3 pass) |
-| `/toulmin:toulmin-qualify` | Unified qualifier synthesis — aggregate all tool findings into a precise scope statement | Manual (after all review tools) |
-| `/toulmin:toulmin-tree` | Behavior tree visualization — Mermaid diagram of task + gates + partitions + cross-session refs | Manual / status review |
+| `/toulmin:toulmin-plan "task" --lang zh` | Agent-orchestrated structured entry | Manual |
+| `/toulmin:toulmin-vibe --lang zh` | Vibe coding + checkpoint + drift | Manual |
+| `/toulmin:toulmin-verify` | L1-L4 verification (Gate 2) | Plan dispatches agent / vibe standalone |
+| `/toulmin:toulmin-debate` | R1-R3 debate (Gate 3) | Plan dispatches agent / vibe standalone |
+| `/toulmin:toulmin-audit "claim"` | External verification (WebSearch) | Manual (gate doc candidate table) |
+| `/toulmin:toulmin-premortem` | Failure backtracking (3 death paths) | Manual (after Gate 2/3) |
+| `/toulmin:toulmin-qualify` | Unified qualifier synthesis | Manual (after all reviews) |
+| `/toulmin:toulmin-tree` | Behavior tree visualization (Mermaid) | Manual / status review |
+| `/toulmin:toulmin-status` | Framework status + integrity check | Manual / checkpoint |
+| `/toulmin:toulmin-override "reason"` | Manual gate override (cooldown-tracked) | Manual |
 
 ---
 
-## 7. Plugin Architecture
+## 10. Plugin Architecture
 
 ```
 toulmin/
 ├── skills/                       # 9 skills
-│   ├── toulmin-plan/SKILL.md     #   Structured entry: p→t→t→gate control flow
+│   ├── toulmin-plan/SKILL.md     #   Agent orchestrator: plan→gates→agents→regression
 │   ├── toulmin-vibe/SKILL.md     #   Vibe entry: checkpoint/VAC/mode transition
-│   ├── toulmin-verify/SKILL.md   #   Gate 2: L1-L4 + gate doc writer
-│   ├── toulmin-debate/SKILL.md   #   Gate 3: R1-R3 + gate doc writer
-│   ├── toulmin-audit/SKILL.md   #   External evidence verification (WebSearch counter-evidence)
-│   ├── toulmin-premortem/SKILL.md #   Prospective hindsight (assume failure → reverse causal chains)
-│   ├── toulmin-qualify/SKILL.md  #   Unified qualifier synthesis (aggregate → precise scope)
-│   ├── toulmin-tree/SKILL.md    #   Behavior tree visualization (Mermaid + partitions + cross-session)
-│   └── toulmin-status/SKILL.md   #   Read-only status summary
+│   ├── toulmin-verify/SKILL.md   #   Gate 2: L1-L4 + gate doc + candidate table
+│   ├── toulmin-debate/SKILL.md   #   Gate 3: R1-R3 + gate doc + candidate table
+│   ├── toulmin-audit/SKILL.md   #   External verification: WebSearch → STANDS/NARROW/REFUTED
+│   ├── toulmin-premortem/SKILL.md #   Backtracking: 3 death paths + defenses
+│   ├── toulmin-qualify/SKILL.md  #   Qualifier synthesis: boundaries + confidence + monitors
+│   ├── toulmin-tree/SKILL.md    #   Behavior tree: Mermaid + partitions + cross-session
+│   └── toulmin-status/SKILL.md   #   Status + integrity + override stats
 ├── hooks/
-│   └── hooks.json                # 3 hook registrations
+│   └── hooks.json                # PreToolUse(Write/Edit+Bash) + Stop + SessionStart
 ├── scripts/
-│   ├── lib/
-│   │   └── state.sh              #   Shared state parser + session isolation + defaults
-│   ├── update-gate.sh            #   Unified gate state updater (atomic sed)
-│   ├── pre-tool-use.sh           #   gate_blocked=true → deny Write/Edit
-│   ├── bash-guard.sh             #   gate_blocked=true → deny Bash file-write bypass
-│   ├── partition-track.sh        #   Context partition transition recorder (drift detection)
-│   ├── stop-hook.sh              #   Iteration counter + completion blocker + checkpoint injector
-│   └── session-start.sh          #   Recovery pointer addContext
+│   ├── lib/state.sh              #   Shared parser + session isolation + 12 field defaults
+│   ├── update-gate.sh            #   Gate state updater (atomic sed + idempotent)
+│   ├── pre-tool-use.sh           #   gate_blocked → deny Write/Edit
+│   ├── bash-guard.sh             #   gate_blocked → deny Bash file-write bypass
+│   ├── partition-track.sh        #   Context partition shift recorder
+│   ├── stop-hook.sh              #   Iteration + completion block + checkpoint + drift check
+│   └── session-start.sh          #   Recovery pointer + history scan + similar task match
 ├── agents/
-│   ├── toulmin-debater.md        #   Adversarial reviewer: D1-D6 attack dimensions
-│   └── toulmin-verifier.md       #   Verifier: L1-L4 verification layers
-├── .claude-plugin/
-│   └── plugin.json
-├── README.md
-└── README.en.md
+│   ├── toulmin-debater.md        #   Adversary: D1-D6 attacks (isolated context)
+│   └── toulmin-verifier.md       #   Verifier: L1-L4 + causal trace (isolated context)
+├── .claude-plugin/plugin.json
+├── README.md / README.en.md / README.ja.md
+└── ai-failure-detection-framework.md  # Full theory (10 claims + 10 sections)
 ```
 
 ### Implementation Patterns
 
-**Agent orchestration** (toulmin-plan): Orchestrator handles problem definition + task decomposition + Gate 1 + implementation. Gate 2 (verify) and Gate 3 (debate) dispatch dedicated agents — agents run in isolated contexts, preventing planning conversation from contaminating review findings.
+**Agent orchestration**: Orchestrator handles problem + decomposition + Gate 1 + implementation. Gates 2/3 dispatch isolated agents. Review findings uncontaminated by planning.
 
-**grill-me pattern** (pure prompt-driven): 9 skills + 2 agents. Behavioral guidance through language constraints — no hooks needed.
+**grill-me** (pure prompt): 9 skills + 2 agents. Language constraints guide behavior. No hooks needed.
 
-**ralph-loop pattern** (hook + state file): 3 hook scripts + `.claude/toulmin-state.local.md`. Hard enforcement requires lifecycle interception; state requires cross-turn persistence.
+**ralph-loop** (hook + state): 3 hook scripts + `.claude/toulmin-state.local.md`. Hard enforcement via lifecycle interception.
 
-**Known hook enforcement limits** (see `toulmin-audit` review):
-- ✅ Interactive mode + exit code 2 → deterministic blocking
-- ❌ headless `-p` mode → hooks not invoked
-- ❌ `--dangerously-skip-permissions` → hooks async, denial delayed
-- ❌ subagent tool calls → PreToolUse not triggered
-- ⚠️ Bash write bypass → covered via `bash-guard.sh` (sed/echo>/tee, etc.)
+**Known hook limits** (verified by toulmin-audit):
+- ✅ Interactive + exit code 2 → deterministic block
+- ❌ headless `-p` → hooks not invoked; subagent calls → PreToolUse not triggered
+- ⚠️ Bash bypass → bash-guard.sh; bypass mode → async delay
 
-**Shared infrastructure**:
-- `scripts/lib/state.sh` — Unified frontmatter parsing, session isolation, field defaults. Sourced by all 3 hooks.
-- `scripts/update-gate.sh` — Unified gate state update. Atomic sed, idempotent append, gate-name whitelist validation. Called via `${CLAUDE_PLUGIN_ROOT}` from toulmin-plan/verify/debate.
-
-**State file design** — minimal, hook-decision fields only:
+**State file**:
 ```yaml
 ---
-gate_blocked: false     # PreToolUse checks this field
-phase: plan             # Current phase
-session_id: xxx         # Stop hook session isolation
-iteration: 0            # Stop hook increments; checkpoint detection
-gate_dir: docs/toulmin/2026-06-27-xxx/  # Gate doc path
-gates_passed: [gate-1]  # Passed gates list
+gate_blocked: false     # PreToolUse check
+phase: plan             # plan|task|gate-1|gate-2|code|verify|gate-3|regression|complete
+iteration: 0            # Stop hook increments
+gate_dir: docs/toulmin/YYYY-MM-DD-<slug>/
+gates_passed: [gate-1]  # Passed gates
 gate_current: gate-2    # Active gate
-ca_mode: structured     # structured | vibe
-lang: zh                # Output language
-checkpoint_interval: 20 # Vibe checkpoint interval (0=disabled)
-gate_attempts: 0        # Gate retry counter (display only, no automatic behavior)
-override_count: 0       # Total overrides this session (cooldown tracking)
-override_history: []    # Override log [gate@round, ...]
-partitions: ["task"]    # Context partition trace ["src→dst@iteration:reason", ...]
-partition_current: task # Currently active partition
+ca_mode: structured     # structured|vibe
+lang: zh                # zh|en
+checkpoint_interval: 20 # Vibe checkpoint interval
+gate_attempts: 0        # Retry counter
+override_count: 0       # Override total (cooldown)
+override_history: []    # [gate@round, ...]
+partitions: ["task"]    # [src→dst@iteration:reason, ...]
+partition_current: task # Active partition
 ---
 ```
 
 ---
 
-## 8. Project Artifacts
+## 11. Project Artifacts
 
 ```
 docs/toulmin/YYYY-MM-DD-<task-slug>/
-  gate-1-convergence.md    # Direction argument (Claim/Ground/Warrant/Backing/Rebuttal/Qualifier)
-  gate-2-verification.md   # L1-L4 results (Toulmin format per layer)
+  gate-1-convergence.md    # Direction argument (Toulmin 6 elements)
+  gate-2-verification.md   # L1-L4 + L3.5 causal trace + fact-check candidates
   gate-3-debate.md         # R1-R3 + [ACCEPT/REBUT/CLARIFY/DEMOTE] + verdict
+  qualifier.md             # Unified qualifier (hard/soft boundaries + confidence)
 
-.claude/toulmin-state.local.md  # Hook decision state (cleaned on task completion)
+.claude/toulmin-state.local.md  # Hook decision state (cleaned on completion)
 ```
 
-Gate documents are **third-party argumentation records** — independent of the plugin and conversation context. Failed gates are also recorded ("why this path was blocked"), for future reference.
+Gate documents are **third-party argumentation records** — independent of plugin and conversation. Failed gates also recorded. `qualifier.md` is the design's precise contract.
 
 ---
 
-## 9. Upstream Tool Collaboration
+## 12. Version History
 
-Toulmin runs independently — no dependency on brainstorming or other tools. If project design documents (specs) exist, gate documents link via a single reference line:
-
-```markdown
-> Upstream design: docs/superpowers/specs/2026-06-27-role-based-auth-design.md
-```
-
-No upstream → independent operation. The Toulmin framework is decoupled.
+| Version | Date | Key Additions |
+|---------|------|---------------|
+| v1.0.1 | 2026-06 | Foundation: 5 skills + 3 hooks + L0-L2 + 3 gates + Vibe protocol |
+| v1.1.0 | 2026-07 | v3 External review: audit + premortem + qualify + degradation defenses |
+| v1.2.0 | 2026-07 | v2 Agent orchestration + tree + partition tracking + drift self-check |
 
 ---
 
