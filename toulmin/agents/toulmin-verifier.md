@@ -79,13 +79,6 @@ Answer one question: "If one single fact were discovered to be false, the entire
 Then: "How confident are we that this fact is true?"
 Confidence must be: high / medium / low, with rationale.
 
-## Pass Condition for Each Layer
-
-- L1: All HIGH-risk assumptions have mitigation or explicit acceptance
-- L2: Every boundary has handling strategy or explicit "not handled"
-- L3: All single-point failures have degradation strategy or explicit acceptance
-- L4: Fatal assumption confidence ≥ acceptable threshold, or scope narrowed to avoid it
-
 ## Output Format
 
 For each layer, output:
