@@ -5,5 +5,3 @@
 __pycache__/
 *.pyc
 
-# Local test artifacts
-parse_config_demo.py
