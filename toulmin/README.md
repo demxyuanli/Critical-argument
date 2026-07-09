@@ -205,6 +205,8 @@ toulmin/
 
 ### 实现模式
 
+**Agent编排模式**（toulmin-plan）: 编排者(orchestrator)负责problem definition + task decomposition + Gate 1 + implementation。Gate 2 (verify)和Gate 3 (debate)派发专用agent执行——agent拥有隔离上下文，审查结果不受规划对话污染。
+
 **grill-me模式**（纯prompt驱动）: 9个技能 + 2个agent。对话引导通过语言约束实现，不需要hook。
 
 **ralph-loop模式**（hook + state file）: 3个hook脚本 + `.claude/toulmin-state.local.md`。硬性拦截需要生命周期拦截；状态需要跨轮次持久化。

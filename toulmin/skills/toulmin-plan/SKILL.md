@@ -1,14 +1,14 @@
 ---
 name: toulmin-plan
-description: Start a structured Toulmin critical argumentation task. Plan→Task→Target→Gate1→Verify→Gate2→Code→Verify→Debate→Gate3→Regression. Use for non-trivial tasks with 3+ steps, multi-module impact, or irreversible decisions.
+description: Start a structured Toulmin critical argumentation task. Orchestrates agent-based gate execution — dispatches verifier agent for Gate 2, debater agent for Gate 3. Plan→Task→Target→Gate1→Verify(agent)→Gate2→Code→Debate(agent)→Gate3→[audit|premortem|qualify]→Regression.
 user-invocable: true
 argument-hint: "<task description> [--lang zh|en]"
 disable-model-invocation: false
 ---
 
-# Toulmin Plan — Structured Task Execution
+# Toulmin Plan — Agent-Orchestrated Task Execution
 
-Execute a task through the Toulmin critical argumentation structured process chain with three argumentation gates. Each gate produces a documented Toulmin-format argument before the next phase can begin.
+You are the **orchestrator**. You define the problem, decompose the task, execute Gate 1 yourself (design decisions require human interaction), then **dispatch dedicated agents** for verification (Gate 2) and debate (Gate 3). Agents have isolated contexts — their findings are not contaminated by planning conversation.
 
 ## Phase 0: Initialization
 
@@ -42,6 +42,10 @@ ca_mode: structured
 lang: <lang>
 checkpoint_interval: 0
 gate_attempts: 0
+override_count: 0
+override_history: []
+partitions: ["task"]
+partition_current: task
 ---
 ```
 
@@ -51,118 +55,60 @@ Report: mode, task, gate directory, language. Then proceed.
 
 ## Phase 1: Plan
 
-### Define problem boundary
+Define:
+1. **IN scope** — enumerate explicitly
+2. **OUT of scope** — be specific, prevents scope creep
+3. **Success criteria** — each must be binary-verifiable
 
-1. What is IN scope? Enumerate explicitly.
-2. What is explicitly OUT of scope? Be specific — this prevents scope creep.
-3. What are the success criteria? Each must be binary-verifiable (test can say pass/fail).
-
-**Gate rule**: Do not proceed until user confirms the boundary and success criteria.
-Then update `phase` to `task`:
+**Gate rule**: Do not proceed until user confirms.
 ```bash
 sed -i.bak 's/^phase: .*/phase: task/' .claude/toulmin-state.local.md
 ```
 
 ## Phase 2: Task Decomposition
 
-Decompose into tasks where each task:
-- Is independently verifiable (has its own done condition)
-- Has explicit dependencies declared
-- Does not rely on "we'll figure it out later"
-
-Format:
+Decompose into independently-verifiable tasks:
 ```
 T1: [name] → done: [verifiable condition] → depends: [none / T0]
 T2: [name] → done: [verifiable condition] → depends: [T1]
-...
 ```
 
-**Gate rule**: Do not proceed until user confirms the decomposition.
-Then update `phase` to `gate-1`:
+**Gate rule**: Do not proceed until user confirms.
 ```bash
 sed -i.bak 's/^phase: .*/phase: gate-1/' .claude/toulmin-state.local.md
 ```
 
-## Gate 1 — Direction Convergence
+## Gate 1 — Direction Convergence (YOU execute)
 
-Write `{gate_dir}/gate-1-convergence.md`:
+Write `{gate_dir}/gate-1-convergence.md` with full Toulmin structure:
+- Claim, Ground, Warrant, Backing, Rebuttal (rejected alternatives + reasons), Qualifier (validity scope + expiration conditions)
 
-```markdown
-# Gate 1 — Direction Convergence — [Date Time]
-
-## Decision
-[One-line summary of the chosen approach]
-
-### Claim
-[What we assert is the correct approach]
-
-### Ground
-[Evidence: why this approach fits the problem boundary and task decomposition]
-
-### Warrant
-[Logic: why the evidence supports this being the right approach]
-
-### Backing
-[Additional support: prior art, established patterns, constraints that favor this path]
-
-### Rebuttal
-[Alternative approaches considered and why rejected:
-- Alternative A: [description] → rejected because [reason]
-- Alternative B: [description] → rejected because [reason]]
-
-### Qualifier
-[Scope and expiration conditions:
-- This decision is valid under what conditions?
-- What event would trigger re-evaluation?
-- Bounded to what scale/scope?]
-
-## Verdict: PASSED
-```
-
-Use the shared gate updater:
 ```bash
 bash "${CLAUDE_PLUGIN_ROOT}/scripts/update-gate.sh" gate-1 passed gate-2 gate-2
 ```
 
-# Gate 2 — Limited Verification
+## Gate 2 — Limited Verification (DISPATCH agent)
 
-Delegate to the toulmin-verify skill:
+**Dispatch a dedicated verification agent.** The agent has isolated context — it reads the design docs and code with fresh eyes, untainted by the planning conversation.
 
-> Invoke Skill("toulmin:toulmin-verify"). The skill reads the state file, executes L1-L4, writes gate-2-verification.md, and updates the state file.
+```bash
+sed -i.bak 's/^phase: .*/phase: gate-2/' .claude/toulmin-state.local.md
+```
 
-After toulmin-verify returns:
-- Read gate-2-verification.md for the verdict.
+Use the Agent tool with agent type `toulmin:toulmin-verifier`:
+
+> **Agent prompt**: "Execute the Toulmin limited verification protocol (L1-L4 + L3.5 Causal Trace) against the design documented in {gate_dir}/gate-1-convergence.md and the task decomposition. The task is: <task description>. Language: <lang>. Write gate-2-verification.md to {gate_dir}/ and update state file via update-gate.sh."
+
+The agent returns the verification results. After:
+- Read `{gate_dir}/gate-2-verification.md` for the verdict.
 - If FAILED: halt. Report why. Do not proceed.
 - If PASSED: continue to Phase 3.
+- Append fact-check candidate table to the gate-2 doc.
 
-## Phase 3: Implementation
+## Phase 3: Implementation (YOU execute)
 
-### Target
+Target → Pseudocode → Code → Verify. Each task verified independently against its done condition.
 
-For each task, define the expected output structure (function signatures, data shapes, API contracts).
-```bash
-sed -i.bak 's/^phase: .*/phase: target/' .claude/toulmin-state.local.md
-```
-
-### Pseudocode
-
-For each task, sketch the algorithm skeleton. Pseudocode must trace back to the verification conditions in gate-2.
-```bash
-sed -i.bak 's/^phase: .*/phase: pseudocode/' .claude/toulmin-state.local.md
-```
-
-### Code
-
-Implement each task. Follow the pseudocode and targets.
-```bash
-sed -i.bak 's/^phase: .*/phase: code/' .claude/toulmin-state.local.md
-```
-
-### Verify
-
-Verify each task independently against its done condition. All verifications must pass before proceeding.
-
-Update state file: `phase: verify`, `gate_current: gate-3`.
 ```bash
 sed -i.bak \
   -e 's/^phase: .*/phase: verify/' \
@@ -170,27 +116,47 @@ sed -i.bak \
   .claude/toulmin-state.local.md
 ```
 
-## Gate 3 — Adversarial Debate
+## Gate 3 — Adversarial Debate (DISPATCH agent)
 
-Delegate to the toulmin-debate skill:
+**Dispatch a dedicated debate agent.** The debater agent is adversarial by design — its sole objective is to REFUTE the implementation. This role separation is essential: you (the orchestrator) built the code; the debater has no attachment to it.
 
-> Invoke Skill("toulmin:toulmin-debate"). The skill reads recent code changes, executes R1-R3, writes gate-3-debate.md, and updates the state file.
+```bash
+sed -i.bak 's/^phase: .*/phase: gate-3/' .claude/toulmin-state.local.md
+```
 
-After toulmin-debate returns:
-- Read gate-3-debate.md for the verdict.
-- If FAILED: halt. Fix and re-run debate.
+Use the Agent tool with agent type `toulmin:toulmin-debater`:
+
+> **Agent prompt**: "Execute the Toulmin adversarial debate protocol (R1-R3, D1-D6 attack dimensions) against the implementation at <list of changed files>. The original design is documented in {gate_dir}/gate-1-convergence.md. The verification results are in {gate_dir}/gate-2-verification.md. Language: <lang>. Write gate-3-debate.md to {gate_dir}/ and update state file via update-gate.sh."
+
+The agent returns the debate results. After:
+- Read `{gate_dir}/gate-3-debate.md` for the verdict.
+- If FAILED: halt. Fix and re-dispatch the debater agent.
 - If CONDITIONAL PASS: tag conditions for regression monitoring.
-- If PASSED: continue to regression.
+- If PASSED: continue.
+- Append fact-check candidate table to the gate-3 doc.
 
-## Phase 4: Regression
+## Optional: V3 Review Tools
 
-At the start of Phase 4, update phase:
+After Gate 3 passes, offer the v3 review suite:
+
+```
+Gates 1-3 complete. Optional deep review tools:
+  /toulmin:toulmin-audit "claim"  — external evidence verification (WebSearch)
+  /toulmin:toulmin-premortem       — failure backtracking (3 death paths)
+  /toulmin:toulmin-qualify         — unified qualifier synthesis
+  /toulmin:toulmin-tree            — behavior tree visualization
+```
+
+These are manual — user decides which to run based on risk level.
+
+## Phase 4: Regression (YOU execute)
+
 ```bash
 sed -i.bak 's/^phase: .*/phase: regression/' .claude/toulmin-state.local.md
 ```
 
-1. Re-run all existing verifications — they must still pass.
-2. Run any new verifications covering the boundaries from gate-2 and the conditions from gate-3.
+1. Re-run all existing verifications — must still pass.
+2. Run new verifications covering Gate 2 boundaries + Gate 3 conditions.
 3. All regression tests must pass.
 
 ## Completion
@@ -201,19 +167,18 @@ All 3 gates passed + regression passed = task complete.
 sed -i.bak 's/^phase: .*/phase: complete/' .claude/toulmin-state.local.md
 ```
 
-Report final status with gate document references.
+If qualify was run, reference `{gate_dir}/qualifier.md` as the design's contract.
 
----
+## Agent Dispatch Rules
 
-## L0 Self-Monitoring (active throughout)
+| Gate | Agent | Role | Context | Retry on FAIL |
+|------|-------|------|---------|---------------|
+| Gate 1 | YOU (orchestrator) | Design decision recorder | Full conversation | N/A (interactive) |
+| Gate 2 | `toulmin:toulmin-verifier` | Fresh-eyes verifier | Design docs + code | Re-dispatch after fixes |
+| Gate 3 | `toulmin:toulmin-debater` | Adversarial attacker | Code + gate docs | Re-dispatch after fixes |
 
-During the entire process, self-monitor:
-1. **Fuzzy-word check**: Before stating any conclusion, check — am I using "maybe/probably/might"? If yes, replace with a definite assertion or explicit "I am uncertain because...".
-2. **Drift check** (every ~10 rounds): Am I repeating already-settled points? Am I in narrative mode ("next we will...") without verification anchors?
-3. **Boundary check**: Have I addressed edge cases, or am I generating smooth-path-only output?
-
-If any self-check triggers: report it to the user before continuing.
+**Why agents?** Skills run in your (orchestrator's) context — verification findings are influenced by planning conversation. Agents have isolated contexts: the verifier doesn't know what tradeoffs were discussed, the debater doesn't have attachment to design decisions. This isolation is the mechanism for genuine adversarial review.
 
 ## Output Language
 
-All conversation output in the language specified by `lang` field in state file. Gate documents follow the same language.
+All conversation output in the language specified by `lang` field in state file.

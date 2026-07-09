@@ -200,6 +200,8 @@ toulmin/
 
 ### Implementation Patterns
 
+**Agent orchestration** (toulmin-plan): Orchestrator handles problem definition + task decomposition + Gate 1 + implementation. Gate 2 (verify) and Gate 3 (debate) dispatch dedicated agents — agents run in isolated contexts, preventing planning conversation from contaminating review findings.
+
 **grill-me pattern** (pure prompt-driven): 9 skills + 2 agents. Behavioral guidance through language constraints — no hooks needed.
 
 **ralph-loop pattern** (hook + state file): 3 hook scripts + `.claude/toulmin-state.local.md`. Hard enforcement requires lifecycle interception; state requires cross-turn persistence.
