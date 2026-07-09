@@ -160,6 +160,7 @@ claude --plugin-dir ./toulmin
 | `/toulmin:toulmin-audit "claim"` | External evidence verification — search counter-examples, alternatives, boundary failures | Manual (gate doc candidate table) |
 | `/toulmin:toulmin-premortem` | Prospective hindsight — assume failure, reverse-engineer 3 causal death paths | Manual (after Gate 2/3 pass) |
 | `/toulmin:toulmin-qualify` | Unified qualifier synthesis — aggregate all tool findings into a precise scope statement | Manual (after all review tools) |
+| `/toulmin:toulmin-tree` | Behavior tree visualization — Mermaid diagram of task + gates + partitions + cross-session refs | Manual / status review |
 
 ---
 
@@ -167,7 +168,7 @@ claude --plugin-dir ./toulmin
 
 ```
 toulmin/
-├── skills/                       # 8 skills
+├── skills/                       # 9 skills
 │   ├── toulmin-plan/SKILL.md     #   Structured entry: p→t→t→gate control flow
 │   ├── toulmin-vibe/SKILL.md     #   Vibe entry: checkpoint/VAC/mode transition
 │   ├── toulmin-verify/SKILL.md   #   Gate 2: L1-L4 + gate doc writer
@@ -175,6 +176,7 @@ toulmin/
 │   ├── toulmin-audit/SKILL.md   #   External evidence verification (WebSearch counter-evidence)
 │   ├── toulmin-premortem/SKILL.md #   Prospective hindsight (assume failure → reverse causal chains)
 │   ├── toulmin-qualify/SKILL.md  #   Unified qualifier synthesis (aggregate → precise scope)
+│   ├── toulmin-tree/SKILL.md    #   Behavior tree visualization (Mermaid + partitions + cross-session)
 │   └── toulmin-status/SKILL.md   #   Read-only status summary
 ├── hooks/
 │   └── hooks.json                # 3 hook registrations
@@ -184,6 +186,7 @@ toulmin/
 │   ├── update-gate.sh            #   Unified gate state updater (atomic sed)
 │   ├── pre-tool-use.sh           #   gate_blocked=true → deny Write/Edit
 │   ├── bash-guard.sh             #   gate_blocked=true → deny Bash file-write bypass
+│   ├── partition-track.sh        #   Context partition transition recorder (drift detection)
 │   ├── stop-hook.sh              #   Iteration counter + completion blocker + checkpoint injector
 │   └── session-start.sh          #   Recovery pointer addContext
 ├── agents/
@@ -197,7 +200,9 @@ toulmin/
 
 ### Implementation Patterns
 
-**grill-me pattern** (pure prompt-driven): 8 skills + 2 agents. Behavioral guidance through language constraints — no hooks needed.
+**Agent orchestration** (toulmin-plan): Orchestrator handles problem definition + task decomposition + Gate 1 + implementation. Gate 2 (verify) and Gate 3 (debate) dispatch dedicated agents — agents run in isolated contexts, preventing planning conversation from contaminating review findings.
+
+**grill-me pattern** (pure prompt-driven): 9 skills + 2 agents. Behavioral guidance through language constraints — no hooks needed.
 
 **ralph-loop pattern** (hook + state file): 3 hook scripts + `.claude/toulmin-state.local.md`. Hard enforcement requires lifecycle interception; state requires cross-turn persistence.
 
@@ -228,6 +233,8 @@ checkpoint_interval: 20 # Vibe checkpoint interval (0=disabled)
 gate_attempts: 0        # Gate retry counter (display only, no automatic behavior)
 override_count: 0       # Total overrides this session (cooldown tracking)
 override_history: []    # Override log [gate@round, ...]
+partitions: ["task"]    # Context partition trace ["src→dst@iteration:reason", ...]
+partition_current: task # Currently active partition
 ---
 ```
 

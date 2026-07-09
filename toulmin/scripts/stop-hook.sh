@@ -76,20 +76,45 @@ fi
 # Condition 2: Vibe checkpoint due (iteration % interval == 0)
 if [[ "$STATE_CA_MODE" == "vibe" ]] && [[ "$STATE_CHECKPOINT_INTERVAL" =~ ^[0-9]+$ ]] && [[ "$STATE_CHECKPOINT_INTERVAL" -gt 0 ]]; then
   if [[ $((NEXT_ITERATION % STATE_CHECKPOINT_INTERVAL)) -eq 0 ]]; then
+    # --- Drift self-check injection (appended to checkpoint message) ---
+    DRIFT_CHECK=""
     if [[ "$STATE_LANG" == "zh" ]]; then
-      SYSTEM_MSG="🔍 Toulmin checkpoint: 第${NEXT_ITERATION}轮。请运行L0信号扫描: 检查模糊词密度、语义重复、叙事标记、未验证假设。使用 /toulmin-status 查看状态，或回复'继续'跳过。"
+      DRIFT_CHECK="同时运行漂移自检: 当前对话是否偏离了原始任务？如是，运行: bash \${CLAUDE_PLUGIN_ROOT}/scripts/partition-track.sh \"<新主题名>\" \"drift-detected\""
     else
-      SYSTEM_MSG="🔍 Toulmin checkpoint: iteration ${NEXT_ITERATION}. Run L0 signal scan: check fuzzy-word density, semantic repetition, narrative markers, unverified assumptions. Use /toulmin-status for status, or reply 'continue' to skip."
+      DRIFT_CHECK="Also run drift self-check: has the conversation drifted from the original task? If so, run: bash \${CLAUDE_PLUGIN_ROOT}/scripts/partition-track.sh \"<new-topic>\" \"drift-detected\""
+    fi
+
+    if [[ "$STATE_LANG" == "zh" ]]; then
+      SYSTEM_MSG="🔍 Toulmin checkpoint: 第${NEXT_ITERATION}轮。请运行L0信号扫描: 检查模糊词密度、语义重复、叙事标记、未验证假设。${DRIFT_CHECK}。使用 /toulmin-status 查看状态，或回复'继续'跳过。"
+    else
+      SYSTEM_MSG="🔍 Toulmin checkpoint: iteration ${NEXT_ITERATION}. Run L0 signal scan: check fuzzy-word density, semantic repetition, narrative markers, unverified assumptions. ${DRIFT_CHECK} Use /toulmin-status for status, or reply 'continue' to skip."
     fi
     jq -n \
       --arg msg "$SYSTEM_MSG" \
       '{
         "decision": "block",
-        "reason": "Checkpoint due at iteration '"${NEXT_ITERATION}"'. Run L0 signal scan.",
+        "reason": "Checkpoint due at iteration '"${NEXT_ITERATION}"'. Run L0 signal scan + drift self-check.",
         "systemMessage": $msg
       }'
     exit 0
   fi
+fi
+
+# Condition 3: Structured mode drift check (every 30 iterations, no block)
+if [[ "$STATE_CA_MODE" == "structured" ]] && [[ $((NEXT_ITERATION % 30)) -eq 0 ]] && [[ "$NEXT_ITERATION" -gt 0 ]]; then
+  if [[ "$STATE_LANG" == "zh" ]]; then
+    SYSTEM_MSG="🔍 Toulmin 漂移自检 (第${NEXT_ITERATION}轮): 当前对话是否偏离了原始任务？如已偏离，运行: bash \${CLAUDE_PLUGIN_ROOT}/scripts/partition-track.sh \"<新主题>\" \"drift-detected\"。使用 /toulmin-tree 查看分区历史。"
+  else
+    SYSTEM_MSG="🔍 Toulmin drift check (iteration ${NEXT_ITERATION}): Has the conversation drifted from the original task? If so, run: bash \${CLAUDE_PLUGIN_ROOT}/scripts/partition-track.sh \"<new-topic>\" \"drift-detected\". Use /toulmin-tree to view partition history."
+  fi
+  jq -n \
+    --arg msg "$SYSTEM_MSG" \
+    '{
+      "decision": "block",
+      "reason": "Drift self-check at iteration '"${NEXT_ITERATION}"'.",
+      "systemMessage": $msg
+    }'
+  exit 0
 fi
 
 # Allow stop

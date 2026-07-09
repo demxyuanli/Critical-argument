@@ -160,6 +160,7 @@ claude --plugin-dir ./toulmin
 | `/toulmin:toulmin-audit "主張"` | 外部証拠検証 — 反例・代替案・境界外障害をWeb検索 | 手動（gate文書候補表から） |
 | `/toulmin:toulmin-premortem` | 失敗遡及推演 — 失敗を仮定し3つの因果連鎖を逆導出 | 手動（Gate 2/3通過後） |
 | `/toulmin:toulmin-qualify` | 統一限定詞合成 — 全ツール発見を集約し精確な有効範囲を宣言 | 手動（全レビューツール完了後） |
+| `/toulmin:toulmin-tree` | 行動木可視化 — タスク+gate+分区+セッション間参照のMermaid図 | 手動 / 状態確認 |
 
 ---
 
@@ -167,7 +168,7 @@ claude --plugin-dir ./toulmin
 
 ```
 toulmin/
-├── skills/                       # 8スキル
+├── skills/                       # 9スキル
 │   ├── toulmin-plan/SKILL.md     #   構造化エントリ: p→t→t→gate制御フロー
 │   ├── toulmin-vibe/SKILL.md     #   Vibeエントリ: チェックポイント/VAC/モード遷移
 │   ├── toulmin-verify/SKILL.md   #   Gate 2: L1-L4 + gate文書書込
@@ -175,6 +176,7 @@ toulmin/
 │   ├── toulmin-audit/SKILL.md   #   外部証拠検証（WebSearch反証検索）
 │   ├── toulmin-premortem/SKILL.md #   失敗遡及推演（失敗仮定→逆因果連鎖）
 │   ├── toulmin-qualify/SKILL.md  #   統一限定詞合成（集約→精確な有効範囲）
+│   ├── toulmin-tree/SKILL.md    #   行動木可視化（Mermaid図+分区+セッション間）
 │   └── toulmin-status/SKILL.md   #   読取専用状態サマリ
 ├── hooks/
 │   └── hooks.json                # 3フック登録
@@ -184,6 +186,7 @@ toulmin/
 │   ├── update-gate.sh            #   統合gate状態更新（アトミックsed）
 │   ├── pre-tool-use.sh           #   gate_blocked=true → Write/Edit拒否
 │   ├── bash-guard.sh             #   gate_blocked=true → Bashファイル書込迂回拒否
+│   ├── partition-track.sh        #   コンテキスト分区遷移記録（ドリフト検出）
 │   ├── stop-hook.sh              #   反復カウンタ + 完了ブロック + チェックポイント注入
 │   └── session-start.sh          #   復元ポインタ addContext
 ├── agents/
@@ -198,7 +201,9 @@ toulmin/
 
 ### 実装パターン
 
-**grill-meパターン**（純粋プロンプト駆動）: 8スキル + 2エージェント。言語制約による行動誘導——フック不要。
+**エージェント編成**（toulmin-plan）: 編成者がproblem定義 + task分解 + Gate 1 + 実装を担当。Gate 2（verify）とGate 3（debate）は専用エージェントに派发——エージェントは隔離コンテキストで実行され、計画会話がレビュー結果を汚染しない。
+
+**grill-meパターン**（純粋プロンプト駆動）: 9スキル + 2エージェント。言語制約による行動誘導——フック不要。
 
 **ralph-loopパターン**（フック + stateファイル）: 3フックスクリプト + `.claude/toulmin-state.local.md`。ハード強制にはライフサイクルインターセプトが必要；状態にはクロスターン永続化が必要。
 
@@ -229,6 +234,8 @@ checkpoint_interval: 20 # vibeチェックポイント間隔（0=無効）
 gate_attempts: 0        # gate再試行カウンタ（表示のみ、自動動作なし）
 override_count: 0       # セッションoverride総数（クールダウン追跡）
 override_history: []    # override記録 [gate@round, ...]
+partitions: ["task"]    # コンテキスト分区追跡 ["src→dst@iteration:reason", ...]
+partition_current: task # 現在のアクティブ分区
 ---
 ```
 
