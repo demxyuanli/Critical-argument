@@ -1,8 +1,8 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "toulmin-marketplace",
-  "version": "1.1.0",
-  "description": "Toulmin critical argumentation framework for Claude Code — 8 skills: 3-gate verification, adversarial debate, vibe-coding drift detection, external evidence audit, pre-mortem analysis, unified qualifier synthesis",
+  "version": "1.2.0",
+  "description": "Toulmin critical argumentation framework for Claude Code — 9 skills: agent-orchestrated 3-gate verification, adversarial debate, vibe-coding drift detection, external evidence audit, pre-mortem analysis, unified qualifier synthesis, behavior tree visualization, context partition tracking",
   "owner": {
     "name": "demxyuanli",
     "url": "https://github.com/demxyuanli"
@@ -11,8 +11,8 @@
     {
       "name": "toulmin",
       "description": "Toulmin critical argumentation framework — plan→task→target→Gate1→verify→Gate2→code→debate→Gate3→regression. 8 skills: structured & vibe entries, L1-L4 verification (with L3.5 causal trace), R1-R3 adversarial debate (D1-D6 attack dimensions), external evidence audit via WebSearch, pre-mortem failure backtracking, unified qualifier synthesis, manual override with cooldown. L0-L2 drift detection with checkpoint protocol.",
-      "version": "1.1.0",
-      "source": "https://github.com/demxyuanli/Critical-argument/releases/download/v1.1.0/toulmin-1.1.0.zip",
+      "version": "1.2.0",
+      "source": "https://github.com/demxyuanli/Critical-argument/releases/download/v1.2.0/toulmin-1.2.0.zip",
       "category": "development",
       "homepage": "https://github.com/demxyuanli/Critical-argument",
       "license": "MIT"
