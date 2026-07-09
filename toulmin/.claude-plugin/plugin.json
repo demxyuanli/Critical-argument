@@ -1,6 +1,6 @@
 {
   "name": "toulmin",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Toulmin critical argumentation framework — structured process enforcement, 3-gate verification, adversarial debate review, and vibe-coding drift detection for AI-assisted engineering. Built on the Toulmin argumentation model (Claim, Ground, Warrant, Backing, Rebuttal, Qualifier).",
   "author": {
     "name": "Critical Argument Project"
