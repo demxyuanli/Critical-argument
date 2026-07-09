@@ -4,6 +4,7 @@
 #   1. Iteration counting (every stop increments counter)
 #   2. Completion enforcement (gate_blocked=true → block stop)
 #   3. Checkpoint injection (vibe mode, iteration % N == 0 → block + inject checkpoint task)
+#   4. Drift self-check (structured: every 30, vibe: at checkpoint)
 
 set -euo pipefail
 
@@ -37,30 +38,12 @@ mv "$TEMP_FILE" "$STATE_FILE"
 
 # Condition 1: gate_blocked → block completion
 if [[ "$STATE_GATE_BLOCKED" == "true" ]]; then
-  # Consistency check: does gate doc actually say FAILED?
-  if ! verify_gate_blocked_consistency; then
-    # State file may be stale — softened block (still blocks, but message is advisory)
-    if [[ "$STATE_LANG" == "zh" ]]; then
-      SYSTEM_MSG="⚠️ 状态文件显示 ${STATE_GATE_CURRENT} 未通过，但gate文档缺失或不一致——state file可能过时。本次仍拦截完成，但请运行 /toulmin-status 检查。如确认无需拦截: /toulmin-override \"理由\"。"
-    else
-      SYSTEM_MSG="⚠️ State file says ${STATE_GATE_CURRENT} not passed, but gate document is missing or inconsistent — state file may be stale. Completion is still blocked, but run /toulmin-status to check. If block is incorrect: /toulmin-override \"reason\"."
-    fi
-    jq -n \
-      --arg msg "$SYSTEM_MSG" \
-      '{
-        "decision": "block",
-        "reason": "State file inconsistency detected. Run /toulmin-status.",
-        "systemMessage": $msg
-      }'
-    exit 0
-  fi
-
   if [[ "$STATE_LANG" == "zh" ]]; then
     SYSTEM_MSG="⛔ 不能声称完成: ${STATE_GATE_CURRENT} 未通过（第${STATE_GATE_ATTEMPTS}次尝试）。运行 /toulmin-status 查看详情。驳回: /toulmin-override \"理由\"。"
-    REASON="Gate ${STATE_GATE_CURRENT} 未通过，请先完成当前gate验证。"
+    REASON="Gate ${STATE_GATE_CURRENT} 未通过——完成验证或override后重试。"
   else
     SYSTEM_MSG="⛔ Cannot claim completion: ${STATE_GATE_CURRENT} not passed (attempt #${STATE_GATE_ATTEMPTS}). Run /toulmin-status for details. Override: /toulmin-override \"reason\"."
-    REASON="Gate ${STATE_GATE_CURRENT} not passed. Complete the current gate verification first."
+    REASON="Gate ${STATE_GATE_CURRENT} not passed — complete verification or override."
   fi
   jq -n \
     --arg reason "$REASON" \
@@ -76,7 +59,6 @@ fi
 # Condition 2: Vibe checkpoint due (iteration % interval == 0)
 if [[ "$STATE_CA_MODE" == "vibe" ]] && [[ "$STATE_CHECKPOINT_INTERVAL" =~ ^[0-9]+$ ]] && [[ "$STATE_CHECKPOINT_INTERVAL" -gt 0 ]]; then
   if [[ $((NEXT_ITERATION % STATE_CHECKPOINT_INTERVAL)) -eq 0 ]]; then
-    # --- Drift self-check injection (appended to checkpoint message) ---
     DRIFT_CHECK=""
     if [[ "$STATE_LANG" == "zh" ]]; then
       DRIFT_CHECK="同时运行漂移自检: 当前对话是否偏离了原始任务？如是，运行: bash \${CLAUDE_PLUGIN_ROOT}/scripts/partition-track.sh \"<新主题名>\" \"drift-detected\""
@@ -100,7 +82,7 @@ if [[ "$STATE_CA_MODE" == "vibe" ]] && [[ "$STATE_CHECKPOINT_INTERVAL" =~ ^[0-9]
   fi
 fi
 
-# Condition 3: Structured mode drift check (every 30 iterations, no block)
+# Condition 3: Structured mode drift check (every 30 iterations)
 if [[ "$STATE_CA_MODE" == "structured" ]] && [[ $((NEXT_ITERATION % 30)) -eq 0 ]] && [[ "$NEXT_ITERATION" -gt 0 ]]; then
   if [[ "$STATE_LANG" == "zh" ]]; then
     SYSTEM_MSG="🔍 Toulmin 漂移自检 (第${NEXT_ITERATION}轮): 当前对话是否偏离了原始任务？如已偏离，运行: bash \${CLAUDE_PLUGIN_ROOT}/scripts/partition-track.sh \"<新主题>\" \"drift-detected\"。使用 /toulmin-tree 查看分区历史。"
