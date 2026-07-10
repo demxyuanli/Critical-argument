@@ -166,6 +166,8 @@ Three-layer safety net: checkpoints + VAC + drift self-check.
 
 ## 8. Installation
 
+### Claude Code
+
 ```bash
 # Global install
 cp -r toulmin ~/.claude/skills/toulmin
@@ -176,6 +178,14 @@ claude plugin install ./toulmin-1.2.0.zip --scope user
 # Development mode
 claude --plugin-dir ./toulmin
 ```
+
+### Cursor
+
+```bash
+bash toulmin/cursor/install.sh
+```
+
+**Cursor limitations** (vs Claude Code): No Agent isolation (Gate 2/3 use grill-me prompt-driven mode). No Stop hook (no iteration counting, checkpoint injection, or drift self-check). preToolUse and sessionStart hooks functional. State file + all 9 skills available.
 
 ---
 

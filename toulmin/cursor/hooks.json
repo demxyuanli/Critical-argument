@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "command": "env CLAUDE_PLUGIN_ROOT=\"${CURSOR_SKILLS_ROOT}/toulmin\" bash \"${CURSOR_SKILLS_ROOT}/toulmin/scripts/pre-tool-use.sh\""
+      },
+      {
+        "matcher": "Bash",
+        "command": "env CLAUDE_PLUGIN_ROOT=\"${CURSOR_SKILLS_ROOT}/toulmin\" bash \"${CURSOR_SKILLS_ROOT}/toulmin/scripts/bash-guard.sh\""
+      }
+    ],
+    "sessionStart": [
+      {
+        "matcher": "startup",
+        "command": "env CLAUDE_PLUGIN_ROOT=\"${CURSOR_SKILLS_ROOT}/toulmin\" bash \"${CURSOR_SKILLS_ROOT}/toulmin/scripts/session-start.sh\""
+      }
+    ]
+  }
+}

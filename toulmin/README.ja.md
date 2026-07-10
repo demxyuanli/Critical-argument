@@ -166,6 +166,8 @@ Premortemがtoulmin自身を分析し3つの退化経路を特定、すべて防
 
 ## 8. インストール
 
+### Claude Code
+
 ```bash
 # グローバルインストール
 cp -r toulmin ~/.claude/skills/toulmin
@@ -176,6 +178,14 @@ claude plugin install ./toulmin-1.2.0.zip --scope user
 # 開発モード
 claude --plugin-dir ./toulmin
 ```
+
+### Cursor
+
+```bash
+bash toulmin/cursor/install.sh
+```
+
+**Cursor 制限**（vs Claude Code）: Agent隔離なし（Gate 2/3はgrill-meプロンプト駆動）。Stopフックなし（反復カウント・チェックポイント注入・ドリフト自己チェック無効）。preToolUse・sessionStartフックは動作。Stateファイル + 全9スキル利用可能。
 
 ---
 

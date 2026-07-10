@@ -166,6 +166,8 @@ Vibe模式包含checkpoint + VAC + 漂移自检的三层安全网：
 
 ## 8. 安装
 
+### Claude Code
+
 ```bash
 # 全局安装
 cp -r toulmin ~/.claude/skills/toulmin
@@ -176,6 +178,14 @@ claude plugin install ./toulmin-1.2.0.zip --scope user
 # 开发模式
 claude --plugin-dir ./toulmin
 ```
+
+### Cursor
+
+```bash
+bash toulmin/cursor/install.sh
+```
+
+**Cursor 限制**（vs Claude Code）: 无 Agent 隔离（Gate 2/3 用 prompt 驱动）。无 Stop hook（无轮次计数、无 checkpoint 注入、无漂移自检）。preToolUse 和 sessionStart hook 正常。State file + 全部 9 个 skill 可用。
 
 ---
 
