@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "hooks": {
+    "preToolUse": [
+      {
+        "command": "./hooks/rtk-rewrite.cmd",
+        "matcher": "Shell"
+      },
+      {
+        "matcher": "Write|Edit",
+        "command": "env CLAUDE_PLUGIN_ROOT=\"${CURSOR_SKILLS_ROOT}/toulmin\" bash \"${CURSOR_SKILLS_ROOT}/toulmin/scripts/pre-tool-use.sh\""
+      },
+      {
+        "matcher": "Bash",
+        "command": "env CLAUDE_PLUGIN_ROOT=\"${CURSOR_SKILLS_ROOT}/toulmin\" bash \"${CURSOR_SKILLS_ROOT}/toulmin/scripts/bash-guard.sh\""
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "command": "cmd /c \"C:\\Users\\85332\\.cursor\\hooks\\crg-update.cmd\"",
+        "timeout": 5
+      }
+    ],
+    "sessionStart": [
+      {
+        "command": "cmd /c \"C:\\Users\\85332\\.cursor\\hooks\\crg-session-start.cmd\"",
+        "timeout": 5
+      },
+      {
+        "matcher": "startup",
+        "command": "env CLAUDE_PLUGIN_ROOT=\"${CURSOR_SKILLS_ROOT}/toulmin\" bash \"${CURSOR_SKILLS_ROOT}/toulmin/scripts/session-start.sh\""
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "matcher": "^git\\s+commit",
+        "command": "cmd /c \"C:\\Users\\85332\\.cursor\\hooks\\crg-pre-commit.cmd\"",
+        "timeout": 10
+      }
+    ]
+  }
+}

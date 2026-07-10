@@ -22,13 +22,22 @@ cp -r "${SRC_DIR}/scripts" "${SKILLS_DST}/"
 cp "${SRC_DIR}/.claude-plugin/plugin.json" "${SKILLS_DST}/" 2>/dev/null || true
 echo "  Skills → ${SKILLS_DST}"
 
-# 2. Install hooks — if user has existing hooks, warn about manual merge
+# 2. Install hooks
 CURSOR_HOOKS="${SRC_DIR}/cursor/hooks.json"
 if [[ -f "${HOOKS_DST}" ]]; then
   cp "${HOOKS_DST}" "${HOOKS_DST}.toulmin-backup"
-  echo "  User has existing hooks — backed up to .toulmin-backup"
-  echo "  ⚠️  Manual step: merge toulmin/cursor/hooks.json into ~/.cursor/hooks.json"
-  echo "     Toulmin hooks to add: preToolUse (Write|Edit + Bash), sessionStart"
+  echo "  Backed up existing hooks → ${HOOKS_DST}.toulmin-backup"
+  echo ""
+  echo "  ⚠️  Merge required. Add these entries to ${HOOKS_DST}:"
+  echo ""
+  echo "  preToolUse array (append to existing entries):"
+  echo '    { "matcher": "Write|Edit", "command": "env CLAUDE_PLUGIN_ROOT=... bash ...pre-tool-use.sh" }'
+  echo '    { "matcher": "Bash",     "command": "env CLAUDE_PLUGIN_ROOT=... bash ...bash-guard.sh" }'
+  echo ""
+  echo "  sessionStart array (append to existing entries):"
+  echo '    { "matcher": "startup",  "command": "env CLAUDE_PLUGIN_ROOT=... bash ...session-start.sh" }'
+  echo ""
+  echo "  Merged example: toulmin/cursor/hooks.merged-example.json"
 else
   cp "${CURSOR_HOOKS}" "${HOOKS_DST}"
   echo "  Created → ${HOOKS_DST}"

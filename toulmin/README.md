@@ -190,7 +190,7 @@ bash toulmin/cursor/install.sh
 bash toulmin/cursor/install.sh
 ```
 
-安装后重启 Cursor。如已有 hooks，install.sh 会备份原文件并提示手动合并。
+安装后重启 Cursor。如已有 hooks，install.sh 会备份原文件并提示手动合并（参考 `toulmin/cursor/hooks.merged-example.json`）。
 
 **使用方式**（与 Claude Code 相同）:
 ```
