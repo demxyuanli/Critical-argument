@@ -182,10 +182,37 @@ claude --plugin-dir ./toulmin
 ### Cursor
 
 ```bash
+# Download & extract
+unzip toulmin-cursor-1.2.1.zip
+bash toulmin/cursor/install.sh
+
+# Or install from source
 bash toulmin/cursor/install.sh
 ```
 
-**Cursor limitations** (vs Claude Code): No Agent isolation (Gate 2/3 use grill-me prompt-driven mode). No Stop hook (no iteration counting, checkpoint injection, or drift self-check). preToolUse and sessionStart hooks functional. State file + all 9 skills available.
+Restart Cursor. If you have existing hooks, install.sh backs them up and prompts for manual merge.
+
+**Usage** (same commands as Claude Code):
+```
+/toulmin:toulmin-plan "task" --lang zh
+/toulmin:toulmin-vibe --lang zh
+/toulmin:toulmin-audit "claim"
+... (all 9 skills)
+```
+
+**Cursor vs Claude Code:**
+
+| Capability | Claude Code | Cursor |
+|------------|------------|--------|
+| 9 skills | ✅ | ✅ |
+| preToolUse hook (Write/Edit+Bash block) | ✅ | ✅ |
+| sessionStart hook (recovery pointer) | ✅ | ✅ |
+| Agent isolation (Gate 2/3) | ✅ | ❌ (falls back to prompt-driven) |
+| Stop hook (iteration counting) | ✅ | ❌ (platform lacks this hook) |
+| Stop hook (checkpoint injection) | ✅ | ❌ |
+| Stop hook (drift self-check) | ✅ | ❌ |
+| state file (gate state) | ✅ | ✅ |
+| update-gate.sh | ✅ | ✅ |
 
 ---
 
@@ -296,6 +323,7 @@ Gate documents are **third-party argumentation records** — independent of plug
 | v1.0.1 | 2026-06 | Foundation: 5 skills + 3 hooks + L0-L2 + 3 gates + Vibe protocol |
 | v1.1.0 | 2026-07 | v3 External review: audit + premortem + qualify + degradation defenses |
 | v1.2.0 | 2026-07 | v2 Agent orchestration + tree + partition tracking + drift self-check |
+| v1.2.1 | 2026-07 | Slim (-141 lines) + bilingual docs + Cursor IDE support |
 
 ---
 

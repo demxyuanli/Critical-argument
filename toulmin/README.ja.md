@@ -182,10 +182,37 @@ claude --plugin-dir ./toulmin
 ### Cursor
 
 ```bash
+# ダウンロード＆解凍
+unzip toulmin-cursor-1.2.1.zip
+bash toulmin/cursor/install.sh
+
+# またはソースからインストール
 bash toulmin/cursor/install.sh
 ```
 
-**Cursor 制限**（vs Claude Code）: Agent隔離なし（Gate 2/3はgrill-meプロンプト駆動）。Stopフックなし（反復カウント・チェックポイント注入・ドリフト自己チェック無効）。preToolUse・sessionStartフックは動作。Stateファイル + 全9スキル利用可能。
+Cursorを再起動。既存のhooksがある場合、install.shがバックアップし手動マージを促す。
+
+**使用方法**（Claude Codeと同じコマンド）:
+```
+/toulmin:toulmin-plan "task" --lang zh
+/toulmin:toulmin-vibe --lang zh
+/toulmin:toulmin-audit "主張"
+... (全9スキル)
+```
+
+**Cursor vs Claude Code:**
+
+| 能力 | Claude Code | Cursor |
+|------|------------|--------|
+| 9スキル | ✅ | ✅ |
+| preToolUseフック (Write/Edit+Bash遮断) | ✅ | ✅ |
+| sessionStartフック (復元ポインタ) | ✅ | ✅ |
+| Agent隔離 (Gate 2/3) | ✅ | ❌ (プロンプト駆動にフォールバック) |
+| Stopフック (反復カウント) | ✅ | ❌ (プラットフォーム未対応) |
+| Stopフック (チェックポイント注入) | ✅ | ❌ |
+| Stopフック (ドリフト自己チェック) | ✅ | ❌ |
+| stateファイル (gate状態) | ✅ | ✅ |
+| update-gate.sh | ✅ | ✅ |
 
 ---
 
@@ -296,6 +323,7 @@ Gate文書は**第三者論証記録**。qualifier.mdは設計の精確な契約
 | v1.0.1 | 2026-06 | 基盤: 5スキル + 3フック + L0-L2 + 3Gate + Vibe |
 | v1.1.0 | 2026-07 | v3 外部レビュー: audit + premortem + qualify + 退化防御 |
 | v1.2.0 | 2026-07 | v2 Agent編成 + tree + 分区追跡 + ドリフト自己チェック |
+| v1.2.1 | 2026-07 | 簡素化(-141行) + 二言語文書 + Cursor IDE 対応 |
 
 ---
 

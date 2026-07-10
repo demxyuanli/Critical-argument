@@ -182,10 +182,37 @@ claude --plugin-dir ./toulmin
 ### Cursor
 
 ```bash
+# 下载并解压
+unzip toulmin-cursor-1.2.1.zip
+bash toulmin/cursor/install.sh
+
+# 或从源码安装
 bash toulmin/cursor/install.sh
 ```
 
-**Cursor 限制**（vs Claude Code）: 无 Agent 隔离（Gate 2/3 用 prompt 驱动）。无 Stop hook（无轮次计数、无 checkpoint 注入、无漂移自检）。preToolUse 和 sessionStart hook 正常。State file + 全部 9 个 skill 可用。
+安装后重启 Cursor。如已有 hooks，install.sh 会备份原文件并提示手动合并。
+
+**使用方式**（与 Claude Code 相同）:
+```
+/toulmin:toulmin-plan "任务描述" --lang zh
+/toulmin:toulmin-vibe --lang zh
+/toulmin:toulmin-audit "外部主张"
+... (全部 9 个 skill)
+```
+
+**Cursor vs Claude Code 差异:**
+
+| 能力 | Claude Code | Cursor |
+|------|------------|--------|
+| 9 个 skill | ✅ | ✅ |
+| preToolUse hook (Write/Edit+Bash拦截) | ✅ | ✅ |
+| sessionStart hook (恢复指针) | ✅ | ✅ |
+| Agent 隔离上下文 (Gate 2/3) | ✅ | ❌ (回退到 prompt 驱动) |
+| Stop hook (轮次计数) | ✅ | ❌ (平台无此 hook) |
+| Stop hook (checkpoint 注入) | ✅ | ❌ |
+| Stop hook (漂移自检) | ✅ | ❌ |
+| state file (gate 状态) | ✅ | ✅ |
+| update-gate.sh | ✅ | ✅ |
 
 ---
 
@@ -296,6 +323,7 @@ Gate文档是**第三方论证记录**——独立于插件和对话上下文。
 | v1.0.1 | 2026-06 | 基础框架：5技能 + 3Hook + L0-L2 + 3Gate + Vibe协议 |
 | v1.1.0 | 2026-07 | v3外部论证：audit + premortem + qualify + 退化防御 |
 | v1.2.0 | 2026-07 | v2 Agent编排 + tree + 分区追踪 + 漂移自检 |
+| v1.2.1 | 2026-07 | 精简(-141行) + 双语文档 + Cursor IDE 支持 |
 
 ---
 
